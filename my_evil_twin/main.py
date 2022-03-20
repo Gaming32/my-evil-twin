@@ -41,7 +41,6 @@ pygame.init()
 window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF)
 
 vao, vbo, vertex_shader, fragment_shader, shader_program = init_graphics()
-glBufferData(GL_ARRAY_BUFFER, MODEL, GL_STATIC_DRAW)
 
 uni_model = glGetUniformLocation(shader_program, 'model')
 model_matrix = Matrix4f.identity()

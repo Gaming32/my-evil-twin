@@ -1,17 +1,33 @@
 from typing import cast
 
 from OpenGL.GL import *
+import numpy as np
 
 import my_evil_twin
 from my_evil_twin.consts import FLOAT_SIZE
 from my_evil_twin.utils import get_shader
 
+MODEL = np.asarray([
+  #  x,    y,   z, r, g, b
+    -0.5, -0.5, 0, 1, 0, 0,
+    -0.5,  0.5, 0, 1, 0, 0,
+     0.5, -0.5, 0, 1, 0, 0,
+    -0.5,  0.5, 0, 0, 0, 1,
+     0.5,  0.5, 0, 0, 0, 1,
+     0.5, -0.5, 0, 0, 0, 1
+    # -0.6, -0.4, 0, 1, 0, 0,
+    #  0.6, -0.4, 0, 0, 1, 0,
+    #  0,    0.6, 0, 0, 0, 1,
+], dtype=np.float32)
+
 
 def init_graphics() -> tuple[int, int, int, int, int]:
     vao = glGenVertexArrays(1)
     glBindVertexArray(vao)
+
     vbo = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
+    glBufferData(GL_ARRAY_BUFFER, MODEL, GL_STATIC_DRAW)
 
     vertex_shader = get_shader(GL_VERTEX_SHADER, my_evil_twin, 'shader.vert')
     fragment_shader = get_shader(GL_FRAGMENT_SHADER, my_evil_twin, 'vertexcolor.frag')
