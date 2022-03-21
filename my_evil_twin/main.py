@@ -1,3 +1,4 @@
+import colorsys
 import math
 from typing import cast
 
@@ -11,12 +12,12 @@ from my_evil_twin.consts import TURN_SPEED
 from my_evil_twin.init import init_graphics
 
 MODEL = np.asarray([
-    [1, -0.5, 0, 0, 0, 0],
-    [0, -0.5, 0, 1, 0, 0],
-    [0,  0.5, 0, 0, 1, 0],
-    [0,  0.5, 0, 0, 1, 0],
-    [1,  0.5, 0, 0, 0, 1],
-    [1, -0.5, 0, 0, 0, 0],
+    [1, -0.5, 0],
+    [0, -0.5, 0],
+    [0,  0.5, 0],
+    [0,  0.5, 0],
+    [1,  0.5, 0],
+    [1, -0.5, 0],
     # -0.6, -0.4, 0, 1, 0, 0,
     #  0.6, -0.4, 0, 0, 1, 0,
     #  0,    0.6, 0, 0, 0, 1,
@@ -48,7 +49,7 @@ glNewList(model, GL_COMPILE)
 glBegin(GL_TRIANGLES)
 for vert in MODEL:
     glVertex3f(vert[0], vert[1], vert[2])
-    glColor3f(vert[3], vert[4], vert[5])
+    glColor3f(*colorsys.hsv_to_rgb((vert[1] / 15.0) % 1, 1.0, 1.0))
 glEnd()
 glEndList()
 
