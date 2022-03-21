@@ -12,11 +12,11 @@ from my_evil_twin.level import Level
 
 LEVEL = Level.parse({
     'elements': [
-        # {
-        #     'type': 'sphere',
-        #     'center': (0, 0, 0),
-        #     'radius': 2
-        # },
+        {
+            'type': 'sphere',
+            'center': (4.5, 0.5, 3),
+            'radius': 2
+        },
         {
             'type': 'rectangle',
             'pos1': (0, 0, 0),
@@ -60,6 +60,8 @@ clock = pygame.time.Clock()
 
 running = True
 
+on_ground = False
+
 mouse_rel = pygame.Vector2()
 while running:
     mouse_rel.update(0, 0)
@@ -85,7 +87,9 @@ while running:
             elif event.key == K_d:
                 velocity.x = -MOVE_SPEED
             elif event.key == K_SPACE:
-                velocity.y = JUMP_SPEED
+                if on_ground:
+                    velocity.y = JUMP_SPEED
+                    on_ground = False
         elif event.type == KEYUP:
             if event.key in (K_w, K_s):
                 velocity.z = 0
@@ -101,10 +105,12 @@ while running:
     velocity.y += GRAVITY * delta
     position += velocity.rotate_y(-rotation.y) * delta
     if position.y < 0:
+        on_ground = True
         position.y = 0
         velocity.y = 0
     collided, position = LEVEL.collide(position)
     if collided:
+        on_ground = True
         velocity.y = 0
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
