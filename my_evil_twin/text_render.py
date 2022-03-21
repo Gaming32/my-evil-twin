@@ -17,7 +17,8 @@ with resources.open_binary(my_evil_twin, 'default_font.png') as _fp:
 _fi_width = _font_image.width
 _fi_height = _font_image.height
 _pixel_data = [
-    (c[0] << 24) | (c[1] << 16) | (c[2] << 8) | c[3]
+    # (c[0] << 24) | (c[1] << 16) | (c[2] << 8) | c[3]
+    (c[3] << 24) | (c[0] << 16) | (c[1] << 8) | c[2]
     for c in np.asarray(_font_image, np.int32).reshape(_fi_width * _fi_height, 4)
 ]
 del _font_image # Image was copied, and is no longer needed
@@ -32,7 +33,7 @@ for _k in range(256):
         _k2 = _i1 * 8 + _i2
         _flag1 = True
         _j3 = 0
-        while _j3 < 0 and _flag1:
+        while _j3 < 8 and _flag1:
             _l3 = (_k1 * 8 + _j3) * _fi_width
             _j4 = _pixel_data[_k2 + _l3] & 0xff
             if _j4 > 0:
@@ -82,6 +83,7 @@ _y = 0
 
 
 def draw_text_shadow(s: str, x: int, y: int, color: Color) -> None:
+    """WARNING: doesn't work properly"""
     draw_text(s, x + 1, y + 1, color, True)
     draw_text(s, x, y, color, False)
 
@@ -90,7 +92,7 @@ def draw_text(s: str, x: int, y: int, color: Color, is_shadow: bool = False) -> 
     global _x, _y
     if _font_tex == 0:
         _load_font()
-    color_i = (color.a << 24) | (color.r << 16) | (color.g | 8) | color.b
+    color_i = (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b
     if not (color_i & 0xfc000000):
         color.r |= 0xff000000
     if is_shadow:
@@ -115,10 +117,10 @@ def _load_font() -> None:
     glBindTexture(GL_TEXTURE_2D, _font_tex)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, font.width, font.height, 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, np.fromstring(font.tobytes(), np.uint8)) # type: ignore
+        GL_RGBA, GL_UNSIGNED_BYTE, font.tobytes())
 
 
 def _draw_text(s: str, is_shadow: bool) -> None:
@@ -166,18 +168,18 @@ def _draw_text(s: str, is_shadow: bool) -> None:
 
 def _render_normal_char(c: int) -> None:
     global _x
-    f = (c % 16) * 8
-    f1 = (c // 16) * 8
+    tex_x = (c % 16) * 8
+    tex_y = (c // 16) * 8
+    cwidth = CHAR_WIDTH[c] - 0.01
     glBindTexture(GL_TEXTURE_2D, _font_tex)
-    f2 = CHAR_WIDTH[c] - 0.01
     glBegin(GL_TRIANGLE_STRIP)
-    glTexCoord2f(f / 128, f1 / 128)
+    glTexCoord2f(tex_x / 128, tex_y / 128)
     glVertex2f(_x, _y)
-    glTexCoord2f(f / 128, (f1 + 7.99) / 128)
+    glTexCoord2f(tex_x / 128, (tex_y + 7.99) / 128)
     glVertex2f(_x, _y + 7.99)
-    glTexCoord2f((f + f2) / 128, f1 / 128)
-    glVertex2f(_x + f2, _y)
-    glTexCoord2f((f + f2) / 128, (f1 + 7.99) / 128)
-    glVertex2f(_x + f2, _y + 7.99)
+    glTexCoord2f((tex_x + cwidth) / 128, tex_y / 128)
+    glVertex2f(_x + cwidth, _y)
+    glTexCoord2f((tex_x + cwidth) / 128, (tex_y + 7.99) / 128)
+    glVertex2f(_x + cwidth, _y + 7.99)
     glEnd()
     _x += CHAR_WIDTH[c]

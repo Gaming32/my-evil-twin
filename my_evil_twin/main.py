@@ -5,6 +5,7 @@ import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
+from my_evil_twin import text_render
 
 from my_evil_twin.consts import GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED
 from my_evil_twin.draw import _draw_circle, draw_circle
@@ -49,6 +50,8 @@ LEVEL.draw_compile()
 
 glClearColor(0.5, 0.5, 1.0, 1.0)
 # glEnable(GL_MULTISAMPLE) # TBD
+glEnable(GL_BLEND)
+glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 rotation = pygame.Vector2()
 velocity = pygame.Vector3()
@@ -68,11 +71,6 @@ while running:
     mouse_rel.update(0, 0)
 
     delta = clock.tick(75) / 1000.0
-    # if delta:
-    #     print('FPS:', 1 / delta, '                        ', end='\r')
-    # else:
-    #     print('FPS: >1000                         ', end='\r')
-    print(position, '                       ', end='\r')
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
@@ -131,20 +129,21 @@ while running:
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
     glLoadIdentity()
-    glOrtho(0, screen_size.x, screen_size.y, 0, 100, 300)
+    glOrtho(0, 320, 180, 0, 100, 300)
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
     glLoadIdentity()
     glTranslatef(0, 0, -200)
+    glEnable(GL_TEXTURE_2D)
 
-    # glBegin(GL_TRIANGLES)
-    # glColor3f(1, 1, 1)
-    # glVertex2f(10, 0)
-    # glVertex2f(300, 0)
-    # glVertex2f(100, 500)
-    # glEnd()
-    draw_text('hello world', 100, 100, Color(255, 255, 255))
+    if delta == 0:
+        fps_text = 'FPS: >1000'
+    else:
+        fps_text = f'FPS: {1 / delta:.2f}'
+    draw_text(fps_text, 2, 2, Color(255, 255, 255))
+    draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
 
+    glDisable(GL_TEXTURE_2D)
     glPopMatrix()
     glMatrixMode(GL_PROJECTION)
     glPopMatrix()
