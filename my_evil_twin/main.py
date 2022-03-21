@@ -1,3 +1,4 @@
+from collections import deque
 import colorsys
 
 import numpy as np
@@ -7,7 +8,7 @@ from OpenGL.GLU import *
 from pygame.locals import *
 from my_evil_twin import text_render
 
-from my_evil_twin.consts import GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED
+from my_evil_twin.consts import FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED, VSYNC
 from my_evil_twin.draw import _draw_circle, draw_circle
 from my_evil_twin.level import Level
 from my_evil_twin.text_render import draw_text, draw_text_shadow
@@ -42,7 +43,7 @@ def resize_view(width: int, height: int) -> None:
 
 pygame.init()
 
-window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF)
+window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF, vsync=VSYNC)
 
 resize_view(window.get_width(), window.get_height())
 
@@ -66,11 +67,13 @@ running = True
 
 on_ground = False
 
+fps_vals = deque(maxlen=240)
+
 mouse_rel = pygame.Vector2()
 while running:
     mouse_rel.update(0, 0)
 
-    delta = clock.tick(75) / 1000.0
+    delta = clock.tick() / 1000.0
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
@@ -94,6 +97,11 @@ while running:
                 velocity.z = 0
             elif event.key in (K_a, K_d):
                 velocity.x = 0
+
+    fps = 1 / delta if delta else 1000
+    fps_vals.append(fps)
+    fps_smooth_value = sum(fps_vals) / len(fps_vals)
+    min_fps = min(fps_vals)
 
     rotation.x += mouse_rel.y * TURN_SPEED
     rotation.y += mouse_rel.x * TURN_SPEED
@@ -136,11 +144,7 @@ while running:
     glTranslatef(0, 0, -200)
     glEnable(GL_TEXTURE_2D)
 
-    if delta == 0:
-        fps_text = 'FPS: >1000'
-    else:
-        fps_text = f'FPS: {1 / delta:.2f}'
-    draw_text(fps_text, 2, 2, Color(255, 255, 255))
+    draw_text(f'FPS/MIN: {fps_smooth_value:.1f}/{min_fps:.1f}', 2, 2, Color(255, 255, 255))
     draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
 
     glDisable(GL_TEXTURE_2D)
