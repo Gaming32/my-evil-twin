@@ -65,10 +65,11 @@ while running:
     mouse_rel.update(0, 0)
 
     delta = clock.tick(75) / 1000.0
-    if delta:
-        print('FPS:', 1 / delta, '                        ', end='\r')
-    else:
-        print('FPS: >1000                         ', end='\r')
+    # if delta:
+    #     print('FPS:', 1 / delta, '                        ', end='\r')
+    # else:
+    #     print('FPS: >1000                         ', end='\r')
+    print(position, '                       ', end='\r')
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
@@ -109,8 +110,8 @@ while running:
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     glRotatef(rotation.x, 1, 0, 0)
-    glRotatef(rotation.y, 0, 1, 0)
-    glTranslatef(position.x, -position.y - 1.8, position.z)
+    glRotatef(rotation.y + 180, 0, 1, 0)
+    glTranslatef(-position.x, -position.y - 1.8, -position.z)
 
     glDepthMask(True)
     glEnable(GL_DEPTH_TEST)
