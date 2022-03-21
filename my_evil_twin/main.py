@@ -11,13 +11,12 @@ from my_evil_twin.consts import TURN_SPEED
 from my_evil_twin.init import init_graphics
 
 MODEL = np.asarray([
-  #  x,    y,   z, r, g, b
-    -0.5, -0.5, 0, 1, 0, 0,
-    -0.5,  0.5, 0, 1, 0, 0,
-     0.5, -0.5, 0, 1, 0, 0,
-    -0.5,  0.5, 0, 0, 0, 1,
-     0.5,  0.5, 0, 0, 0, 1,
-     0.5, -0.5, 0, 0, 0, 1
+    [1, -0.5, 0, 0, 0, 0],
+    [0, -0.5, 0, 1, 0, 0],
+    [0,  0.5, 0, 0, 1, 0],
+    [0,  0.5, 0, 0, 1, 0],
+    [1,  0.5, 0, 0, 0, 1],
+    [1, -0.5, 0, 0, 0, 0],
     # -0.6, -0.4, 0, 1, 0, 0,
     #  0.6, -0.4, 0, 0, 1, 0,
     #  0,    0.6, 0, 0, 0, 1,
@@ -47,10 +46,9 @@ resize_view(window.get_width(), window.get_height())
 model = glGenLists(1)
 glNewList(model, GL_COMPILE)
 glBegin(GL_TRIANGLES)
-glColor3f(1, 1, 1)
-glVertex3f(-0.5, -0.5, 0)
-glVertex3f(-0.5, 0.5, 0)
-glVertex3f(0.5, -0.5, 0)
+for vert in MODEL:
+    glVertex3f(vert[0], vert[1], vert[2])
+    glColor3f(vert[3], vert[4], vert[5])
 glEnd()
 glEndList()
 
