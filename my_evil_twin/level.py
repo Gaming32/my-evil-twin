@@ -1,7 +1,7 @@
-from typing import Literal, Optional, TypedDict
+from typing import Literal, Optional, TypedDict, Union
 
 from OpenGL.GL import *
-from pygame import Vector2, Vector3
+from pygame.math import Vector2, Vector3
 from typing_extensions import NotRequired
 
 from my_evil_twin.draw import draw_circle
@@ -9,7 +9,8 @@ from my_evil_twin.draw import draw_circle
 JsonVector2 = tuple[float, float]
 JsonVector3 = tuple[float, float, float]
 
-Sphere = tuple[Vector3, float]
+Sphere = tuple[Literal['sphere'], Vector3, float]
+LevelElement = Sphere
 
 
 class JsonElement(TypedDict):
@@ -37,7 +38,7 @@ class Level:
         for element in elements:
             if element['type'] == 'sphere':
                 assert 'center' in element and 'radius' in element, 'Required arguments center and radius missing'
-                spheres.append((Vector3(element['center']), element['radius']))
+                spheres.append(('sphere', Vector3(element['center']), element['radius']))
         return Level(spheres)
 
     def draw_compile(self):
@@ -52,8 +53,28 @@ class Level:
             self.draw_compile()
         glCallList(self.draw_list)
         for sphere in self.spheres:
-            draw_circle(sphere[0], rotation, sphere[1], 30)
+            draw_circle(sphere[1], rotation, sphere[2], 30)
 
     def close(self) -> None:
         if self.draw_list is not None:
             glDeleteLists(self.draw_list, 1)
+
+    def is_colliding(self, position: Vector3) -> Optional[LevelElement]:
+        for sphere in self.spheres:
+            if sphere[1].distance_squared_to(position) < sphere[2] * sphere[2]:
+                return sphere
+
+    def move_out_of_collision(self, elem: LevelElement, position: Vector3) -> Vector3:
+        if elem[0] == 'sphere':
+            rel = (position - elem[1]).normalize()
+            return elem[1] + rel * elem[2]
+        else:
+            raise RuntimeError(f"Invalid level element type: {elem[0]}")
+
+    def collide(self, position: Vector3) -> tuple[bool, Vector3]:
+        for i in range(3):
+            elem = self.is_colliding(position)
+            if elem is None:
+                return (i > 0, position)
+            position = self.move_out_of_collision(elem, position)
+        return (True, position)

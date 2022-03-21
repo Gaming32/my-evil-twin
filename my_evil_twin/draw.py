@@ -1,8 +1,7 @@
 import math
 
 from OpenGL.GL import *
-import numpy as np
-from pygame import Vector2, Vector3
+from pygame.math import Vector2, Vector3
 
 from my_evil_twin.utils import y_to_color
 
