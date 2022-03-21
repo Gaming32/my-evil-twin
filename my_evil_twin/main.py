@@ -53,9 +53,7 @@ for vert in MODEL:
 glEnd()
 glEndList()
 
-
-# glClearColor(0.5, 0.5, 1.0, 1.0)
-glClearColor(0.0, 0.0, 0.0, 1.0)
+glClearColor(0.5, 0.5, 1.0, 1.0)
 # glEnable(GL_MULTISAMPLE) # TBD
 
 rotation = pygame.Vector2()
