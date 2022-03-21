@@ -9,7 +9,6 @@ from pygame.locals import *
 from my_evil_twin import text_render
 
 from my_evil_twin.consts import FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED, VSYNC
-from my_evil_twin.draw import _draw_circle, draw_circle
 from my_evil_twin.level import Level
 from my_evil_twin.text_render import draw_text, draw_text_shadow
 
@@ -24,6 +23,11 @@ LEVEL = Level.parse({
             'type': 'rectangle',
             'pos1': (0, 0, 0),
             'pos2': (2, 1, 4)
+        },
+        {
+            'type': 'floor',
+            'pos1': (-10, -10),
+            'pos2': (10, 10)
         }
     ]
 })
@@ -74,7 +78,7 @@ mouse_rel = pygame.Vector2()
 while running:
     mouse_rel.update(0, 0)
 
-    delta = clock.tick() / 1000.0
+    delta = clock.tick(FPS) / 1000.0
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
@@ -112,10 +116,11 @@ while running:
         rotation.x = -90
     velocity.y += GRAVITY * delta
     position += velocity.rotate_y(-rotation.y) * delta
-    if position.y < 0:
-        on_ground = True
-        position.y = 0
-        velocity.y = 0
+    if position.y < -100:
+        on_ground = False
+        position.update(0, 0, -5)
+        velocity.update(0, 0, 0)
+        rotation.update(0, 0)
     collided, position = LEVEL.collide(position)
     if collided:
         on_ground = True

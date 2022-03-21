@@ -17,7 +17,6 @@ with resources.open_binary(my_evil_twin, 'default_font.png') as _fp:
 _fi_width = _font_image.width
 _fi_height = _font_image.height
 _pixel_data = [
-    # (c[0] << 24) | (c[1] << 16) | (c[2] << 8) | c[3]
     (c[3] << 24) | (c[0] << 16) | (c[1] << 8) | c[2]
     for c in np.asarray(_font_image, np.int32).reshape(_fi_width * _fi_height, 4)
 ]
