@@ -44,11 +44,11 @@ vao, vbo, vertex_shader, fragment_shader, shader_program = init_graphics()
 
 uni_model = glGetUniformLocation(shader_program, 'model')
 model_matrix = Matrix4f.identity()
-glUniformMatrix4fv2(uni_model, False, model_matrix)
+glUniformMatrix4fv2(uni_model, True, model_matrix)
 
 uni_view = glGetUniformLocation(shader_program, 'view')
 view_matrix = Matrix4f.identity().translate(0, 0, -5)
-glUniformMatrix4fv2(uni_view, False, view_matrix)
+glUniformMatrix4fv2(uni_view, True, view_matrix)
 
 uni_projection = glGetUniformLocation(shader_program, 'projection')
 
@@ -56,6 +56,7 @@ resize_view(window.get_width(), window.get_height())
 
 
 # glClearColor(0.5, 0.5, 1.0, 1.0)
+glClearColor(0.0, 0.0, 0.0, 1.0)
 # glEnable(GL_MULTISAMPLE) # TBD
 
 rotation = pygame.Vector2()
@@ -94,9 +95,9 @@ while running:
     view_matrix.translate(position.x, -position.y - 1.8, position.z)
     glUniformMatrix4fv2(uni_view, False, view_matrix)
 
-    if mouse_rel:
-        print(rotation)
-        print(view_matrix)
+    # if mouse_rel:
+    #     print(rotation)
+    #     print(view_matrix)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
 

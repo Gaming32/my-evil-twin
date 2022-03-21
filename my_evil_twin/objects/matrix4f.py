@@ -34,6 +34,7 @@ class Matrix4f:
 
     @classmethod
     def identity(cls) -> 'Matrix4f':
+        # self = Matrix4f(np.identity(4, dtype=np.float32))
         self = Matrix4f()
         value = self.value
         value[0, 0] = 1.0
