@@ -7,18 +7,23 @@ from OpenGL.GLU import *
 from pygame.locals import *
 
 from my_evil_twin.consts import GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED
+from my_evil_twin.draw import _draw_circle, draw_circle
+from my_evil_twin.level import Level
 
-MODEL = np.asarray([
-    [1, -0.5, 0],
-    [0, -0.5, 0],
-    [0,  0.5, 0],
-    [0,  0.5, 0],
-    [1,  0.5, 0],
-    [1, -0.5, 0],
-    # -0.6, -0.4, 0, 1, 0, 0,
-    #  0.6, -0.4, 0, 0, 1, 0,
-    #  0,    0.6, 0, 0, 0, 1,
-], dtype=np.float32)
+LEVEL = Level.parse({
+    'elements': [
+        {
+            'type': 'sphere',
+            'center': (0, 0, 0),
+            'radius': 2
+        },
+        {
+            'type': 'sphere',
+            'center': (0, 3, 0),
+            'radius': 1
+        }
+    ]
+})
 
 screen_size = pygame.Vector2()
 
@@ -39,14 +44,7 @@ window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF)
 
 resize_view(window.get_width(), window.get_height())
 
-model = glGenLists(1)
-glNewList(model, GL_COMPILE)
-glBegin(GL_TRIANGLES)
-for vert in MODEL:
-    glVertex3f(vert[0], vert[1], vert[2])
-    glColor3f(*colorsys.hsv_to_rgb((vert[1] / 15.0) % 1, 1.0, 1.0))
-glEnd()
-glEndList()
+LEVEL.draw_compile()
 
 glClearColor(0.5, 0.5, 1.0, 1.0)
 # glEnable(GL_MULTISAMPLE) # TBD
@@ -66,7 +64,7 @@ mouse_rel = pygame.Vector2()
 while running:
     mouse_rel.update(0, 0)
 
-    delta = clock.tick() / 1000.0
+    delta = clock.tick(75) / 1000.0
     if delta:
         print('FPS:', 1 / delta, '                        ', end='\r')
     else:
@@ -116,10 +114,10 @@ while running:
     glDepthMask(True)
     glEnable(GL_DEPTH_TEST)
 
-    glCallList(model)
+    LEVEL.draw(rotation)
 
     pygame.display.flip()
 
 
-glDeleteLists(model, 1)
+LEVEL.close()
 pygame.quit()
