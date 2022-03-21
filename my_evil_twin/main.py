@@ -1,6 +1,4 @@
 import colorsys
-import math
-from typing import cast
 
 import numpy as np
 import pygame
@@ -8,8 +6,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
 
-from my_evil_twin.consts import TURN_SPEED
-from my_evil_twin.init import init_graphics
+from my_evil_twin.consts import GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED
 
 MODEL = np.asarray([
     [1, -0.5, 0],
@@ -40,8 +37,6 @@ pygame.init()
 
 window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF)
 
-init_graphics()
-
 resize_view(window.get_width(), window.get_height())
 
 model = glGenLists(1)
@@ -57,7 +52,6 @@ glClearColor(0.5, 0.5, 1.0, 1.0)
 # glEnable(GL_MULTISAMPLE) # TBD
 
 rotation = pygame.Vector2()
-
 velocity = pygame.Vector3()
 position = pygame.Vector3(0, 0, -5)
 
@@ -72,9 +66,9 @@ mouse_rel = pygame.Vector2()
 while running:
     mouse_rel.update(0, 0)
 
-    delta = clock.tick()
+    delta = clock.tick() / 1000.0
     if delta:
-        print('FPS:', 1000 / delta, '                        ', end='\r')
+        print('FPS:', 1 / delta, '                        ', end='\r')
     else:
         print('FPS: >1000                         ', end='\r')
     for event in pygame.event.get():
@@ -82,23 +76,34 @@ while running:
             running = False
         elif event.type == MOUSEMOTION:
             mouse_rel += event.rel
+        elif event.type == KEYDOWN:
+            if event.key == K_w:
+                velocity.z = MOVE_SPEED
+            elif event.key == K_s:
+                velocity.z = -MOVE_SPEED
+            elif event.key == K_a:
+                velocity.x = MOVE_SPEED
+            elif event.key == K_d:
+                velocity.x = -MOVE_SPEED
+            elif event.key == K_SPACE:
+                velocity.y = JUMP_SPEED
+        elif event.type == KEYUP:
+            if event.key in (K_w, K_s):
+                velocity.z = 0
+            elif event.key in (K_a, K_d):
+                velocity.x = 0
 
-    rotation.x += mouse_rel.y * delta * TURN_SPEED
-    rotation.y += mouse_rel.x * delta * TURN_SPEED
+    rotation.x += mouse_rel.y * TURN_SPEED
+    rotation.y += mouse_rel.x * TURN_SPEED
     if rotation.x > 90:
         rotation.x = 90
     elif rotation.x < -90:
         rotation.x = -90
-
-    # identity(view_matrix)
-    # view_matrix.rotate_x(rotation.x)
-    # view_matrix.rotate_y(rotation.y)
-    # view_matrix.translate(position.x, -position.y - 1.8, position.z)
-    # glUniformMatrix4fv2(uni_view, False, view_matrix)
-
-    # if mouse_rel:
-    #     print(rotation)
-    #     print(view_matrix)
+    velocity.y += GRAVITY * delta
+    position += velocity.rotate_y(-rotation.y) * delta
+    if position.y < 0:
+        position.y = 0
+        velocity.y = 0
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
 
@@ -108,21 +113,9 @@ while running:
     glRotatef(rotation.y, 0, 1, 0)
     glTranslatef(position.x, -position.y - 1.8, position.z)
 
-    # glUniformMatrix4fv2(uni_projection, False, main_projection)
-    # glMatrixMode(GL_PROJECTION)
-    # glLoadIdentity()
-    # gluPerspective(math.radians(80), screen_size.x / screen_size.y, 0.01, 1000)
-
     glDepthMask(True)
     glEnable(GL_DEPTH_TEST)
 
-    # glDrawArrays(GL_TRIANGLES, 0, 6)
-    # glBegin(GL_TRIANGLES)
-    # glColor3f(1, 1, 1)
-    # glVertex3f(-0.5, -0.5, 0)
-    # glVertex3f(-0.5, 0.5, 0)
-    # glVertex3f(0.5, -0.5, 0)
-    # glEnd()
     glCallList(model)
 
     pygame.display.flip()

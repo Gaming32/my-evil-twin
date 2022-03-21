@@ -1,6 +1,4 @@
-import math
-
-DEGREES_90 = math.pi / 2
-
-FLOAT_SIZE = 4
-TURN_SPEED = 1
+TURN_SPEED = 0.15
+MOVE_SPEED = 6.0
+GRAVITY = -50.0
+JUMP_SPEED = 15.0
