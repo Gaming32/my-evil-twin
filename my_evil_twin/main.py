@@ -44,6 +44,7 @@ def resize_view(width: int, height: int) -> None:
 pygame.init()
 
 window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF, vsync=VSYNC)
+pygame.display.set_caption('My Evil Twin')
 
 resize_view(window.get_width(), window.get_height())
 

@@ -1,9 +1,7 @@
-import math
 from typing import Literal, Optional, TypedDict, Union
 
 from OpenGL.GL import *
 from pygame.math import Vector2, Vector3
-from typing_extensions import NotRequired
 
 from my_evil_twin.draw import draw_circle, draw_rectangle
 
@@ -15,12 +13,19 @@ Rectangle = tuple[Literal['rectangle'], Vector3, Vector3]
 LevelElement = Union[Sphere, Rectangle]
 
 
-class JsonElement(TypedDict):
-    type: Literal['sphere', 'rectangle']
-    center: NotRequired[JsonVector3]
-    radius: NotRequired[float]
-    pos1: NotRequired[JsonVector3]
-    pos2: NotRequired[JsonVector3]
+class JsonSphere(TypedDict):
+    type: Literal['sphere']
+    center: JsonVector3
+    radius: float
+
+
+class JsonRectangle(TypedDict):
+    type: Literal['rectangle']
+    pos1: JsonVector3
+    pos2: JsonVector3
+
+
+JsonElement = Union[JsonSphere, JsonRectangle]
 
 
 class LevelJson(TypedDict):
@@ -44,10 +49,8 @@ class Level:
         elems: list[LevelElement] = []
         for element in elements:
             if element['type'] == 'sphere':
-                assert 'center' in element and 'radius' in element
                 spheres.append(('sphere', Vector3(element['center']), element['radius']))
             elif element['type'] == 'rectangle':
-                assert 'pos1' in element and 'pos2' in element
                 elems.append(('rectangle', Vector3(element['pos1']), Vector3(element['pos2'])))
         return Level(spheres, elems)
 
