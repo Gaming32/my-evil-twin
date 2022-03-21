@@ -103,7 +103,9 @@ while running:
     if position.y < 0:
         position.y = 0
         velocity.y = 0
-    _, position = LEVEL.collide(position)
+    collided, position = LEVEL.collide(position)
+    if collided:
+        velocity.y = 0
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
 

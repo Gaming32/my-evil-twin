@@ -1,3 +1,4 @@
+import math
 from typing import Literal, Optional, TypedDict, Union
 
 from OpenGL.GL import *
@@ -75,11 +76,35 @@ class Level:
         for sphere in self.spheres:
             if sphere[1].distance_squared_to(position) < sphere[2] * sphere[2]:
                 return sphere
+        for elem in self.elems:
+            if elem[0] == 'rectangle':
+                if (
+                    elem[1].x < position.x < elem[2].x
+                    and elem[1].y <= position.y < elem[2].y
+                    and elem[1].z < position.z < elem[2].z
+                ):
+                    return elem
 
     def move_out_of_collision(self, elem: LevelElement, position: Vector3) -> Vector3:
         if elem[0] == 'sphere':
             rel = (position - elem[1]).normalize()
             return elem[1] + rel * elem[2]
+        elif elem[0] == 'rectangle':
+            dest = Vector3(position.x, elem[2].y, position.z)
+            dist = elem[2].y - position.y
+            if position.x - elem[1].x < dist:
+                dest = Vector3(elem[1].x, position.y, position.z)
+                dist = position.x - elem[1].x
+            if elem[2].x - position.x < dist:
+                dest = Vector3(elem[2].x, position.y, position.z)
+                dist = elem[2].x - position.x
+            if position.z - elem[1].z < dist:
+                dest = Vector3(position.x, position.y, elem[1].z)
+                dist = position.z - elem[1].z
+            if elem[2].z - position.z < dist:
+                dest = Vector3(position.x, position.y, elem[2].z)
+                dist = elem[2].z - position.z
+            return dest
         else:
             raise RuntimeError(f"Invalid level element type: {elem[0]}")
 
