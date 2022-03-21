@@ -9,6 +9,7 @@ from pygame.locals import *
 from my_evil_twin.consts import GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED
 from my_evil_twin.draw import _draw_circle, draw_circle
 from my_evil_twin.level import Level
+from my_evil_twin.text_render import draw_text, draw_text_shadow
 
 LEVEL = Level.parse({
     'elements': [
@@ -125,6 +126,28 @@ while running:
     glEnable(GL_DEPTH_TEST)
 
     LEVEL.draw(rotation)
+
+    glClear(GL_DEPTH_BUFFER_BIT)
+    glMatrixMode(GL_PROJECTION)
+    glPushMatrix()
+    glLoadIdentity()
+    glOrtho(0, screen_size.x, screen_size.y, 0, 100, 300)
+    glMatrixMode(GL_MODELVIEW)
+    glPushMatrix()
+    glLoadIdentity()
+    glTranslatef(0, 0, -200)
+
+    # glBegin(GL_TRIANGLES)
+    # glColor3f(1, 1, 1)
+    # glVertex2f(10, 0)
+    # glVertex2f(300, 0)
+    # glVertex2f(100, 500)
+    # glEnd()
+    draw_text('hello world', 100, 100, Color(255, 255, 255))
+
+    glPopMatrix()
+    glMatrixMode(GL_PROJECTION)
+    glPopMatrix()
 
     pygame.display.flip()
 

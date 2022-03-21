@@ -2,3 +2,4 @@ pygame
 pyopengl
 numpy
 typing-extensions>=4.1.0
+pillow
