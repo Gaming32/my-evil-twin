@@ -8,6 +8,66 @@ from my_evil_twin.utils import y_to_color
 FULL_CIRCLE = 2 * math.pi
 
 
+def draw_rectangle(pos1: Vector3, pos2: Vector3) -> None:
+    # Bottom face
+    glBegin(GL_POLYGON)
+    glColor3f(*y_to_color(pos1.y))
+    glVertex3f(pos1.x, pos1.y, pos1.z)
+    glVertex3f(pos2.x, pos1.y, pos1.z)
+    glVertex3f(pos2.x, pos1.y, pos2.z)
+    glVertex3f(pos1.x, pos1.y, pos2.z)
+    glEnd()
+
+    # Top face
+    glBegin(GL_POLYGON)
+    glColor3f(*y_to_color(pos2.y))
+    glVertex3f(pos1.x, pos2.y, pos1.z)
+    glVertex3f(pos2.x, pos2.y, pos1.z)
+    glVertex3f(pos2.x, pos2.y, pos2.z)
+    glVertex3f(pos1.x, pos2.y, pos2.z)
+    glEnd()
+
+    # Side face 1
+    glBegin(GL_POLYGON)
+    glColor3f(*y_to_color(pos1.y))
+    glVertex3f(pos1.x, pos1.y, pos1.z)
+    glVertex3f(pos2.x, pos1.y, pos1.z)
+    glColor3f(*y_to_color(pos2.y))
+    glVertex3f(pos2.x, pos2.y, pos1.z)
+    glVertex3f(pos1.x, pos2.y, pos1.z)
+    glEnd()
+
+    # Side face 2
+    glBegin(GL_POLYGON)
+    glColor3f(*y_to_color(pos1.y))
+    glVertex3f(pos1.x, pos1.y, pos1.z)
+    glVertex3f(pos1.x, pos1.y, pos2.z)
+    glColor3f(*y_to_color(pos2.y))
+    glVertex3f(pos1.x, pos2.y, pos2.z)
+    glVertex3f(pos1.x, pos2.y, pos1.z)
+    glEnd()
+
+    # Side face 3
+    glBegin(GL_POLYGON)
+    glColor3f(*y_to_color(pos1.y))
+    glVertex3f(pos2.x, pos1.y, pos1.z)
+    glVertex3f(pos2.x, pos1.y, pos2.z)
+    glColor3f(*y_to_color(pos2.y))
+    glVertex3f(pos2.x, pos2.y, pos2.z)
+    glVertex3f(pos2.x, pos2.y, pos1.z)
+    glEnd()
+
+    # Side face 4
+    glBegin(GL_POLYGON)
+    glColor3f(*y_to_color(pos1.y))
+    glVertex3f(pos1.x, pos1.y, pos2.z)
+    glVertex3f(pos2.x, pos1.y, pos2.z)
+    glColor3f(*y_to_color(pos2.y))
+    glVertex3f(pos2.x, pos2.y, pos2.z)
+    glVertex3f(pos1.x, pos2.y, pos2.z)
+    glEnd()
+
+
 def draw_circle(center: Vector3, rotation: Vector2, radius: float, resolution: int) -> None:
     glPushMatrix()
     glTranslatef(center.x, center.y, center.z)

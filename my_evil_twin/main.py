@@ -12,15 +12,15 @@ from my_evil_twin.level import Level
 
 LEVEL = Level.parse({
     'elements': [
+        # {
+        #     'type': 'sphere',
+        #     'center': (0, 0, 0),
+        #     'radius': 2
+        # },
         {
-            'type': 'sphere',
-            'center': (0, 0, 0),
-            'radius': 2
-        },
-        {
-            'type': 'sphere',
-            'center': (0, 3, 0),
-            'radius': 1
+            'type': 'rectangle',
+            'pos1': (0, 0, 0),
+            'pos2': (2, 1, 4)
         }
     ]
 })
