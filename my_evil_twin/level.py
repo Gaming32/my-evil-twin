@@ -16,7 +16,8 @@ Floor = tuple[Literal['floor'], Vector2, Vector2, float, float]
 WallZ = tuple[Literal['wall_z'], float, float, float, float, float, float, int]
 WallX = tuple[Literal['wall_x'], float, float, float, float, float, float, int]
 DeepLineX = tuple[Literal['deep_line_x'], float, float, float, float, Callable[[float], float], float]
-LevelElement = Union[Sphere, Rectangle, Floor, WallZ, WallX, DeepLineX]
+DeepLineZ = tuple[Literal['deep_line_z'], float, float, float, float, Callable[[float], float], float]
+LevelElement = Union[Sphere, Rectangle, Floor, WallZ, WallX, DeepLineX, DeepLineZ]
 
 
 class JsonSphere(TypedDict):
@@ -71,7 +72,17 @@ class JsonDeepLineX(TypedDict):
     thickness: NotRequired[float]
 
 
-JsonElement = Union[JsonSphere, JsonRectangle, JsonFloor, JsonWallZ, JsonWallX, JsonDeepLineX]
+class JsonDeepLineZ(TypedDict):
+    type: Literal['deep_line_z']
+    x_min: float
+    x_max: float
+    z_min: float
+    z_max: float
+    equation: str
+    thickness: NotRequired[float]
+
+
+JsonElement = Union[JsonSphere, JsonRectangle, JsonFloor, JsonWallZ, JsonWallX, JsonDeepLineX, JsonDeepLineZ]
 
 
 class LevelJson(TypedDict):
@@ -146,6 +157,16 @@ class Level:
                     compile_to_function(element['equation']),
                     element.get('thickness', 1)
                 ))
+            elif element['type'] == 'deep_line_z':
+                elems.append((
+                    'deep_line_z',
+                    element['x_min'],
+                    element['x_max'],
+                    element['z_min'],
+                    element['z_max'],
+                    compile_to_function(element['equation']),
+                    element.get('thickness', 1)
+                ))
         return Level(spheres, elems)
 
     def draw_compile(self):
@@ -200,6 +221,23 @@ class Level:
                     glVertex3f(next_x, next_y, elem[3])
                     glEnd()
                     x = next_x
+            elif elem[0] == 'deep_line_z':
+                z = elem[3]
+                while True:
+                    next_z = min(z + 1, elem[4])
+                    if z == next_z:
+                        break
+                    y = elem[5](z)
+                    next_y = elem[5](next_z)
+                    glBegin(GL_POLYGON)
+                    glColor3f(*y_to_color(y))
+                    glVertex3f(elem[1], y, z)
+                    glVertex3f(elem[2], y, z)
+                    glColor3f(*y_to_color(next_y))
+                    glVertex3f(elem[2], next_y, next_z)
+                    glVertex3f(elem[1], next_y, next_z)
+                    glEnd()
+                    z = next_z
         glEndList()
 
     def draw(self, rotation: Vector2):
@@ -241,7 +279,7 @@ class Level:
                 if (
                     base
                     and elem[1] < position.x < elem[2]
-                    and elem[3] - 0.25 < position.y < elem[4]
+                    and elem[3] - 0.1 < position.y < elem[4]
                 ):
                     return elem
             elif elem[0] == 'wall_x':
@@ -252,11 +290,19 @@ class Level:
                 if (
                     base
                     and elem[1] < position.z < elem[2]
-                    and elem[3] - 0.25 < position.y < elem[4]
+                    and elem[3] - 0.1 < position.y < elem[4]
                 ):
                     return elem
             elif elem[0] == 'deep_line_x':
                 y = elem[5](position.x)
+                if (
+                    elem[1] < position.x < elem[2]
+                    and elem[3] < position.z < elem[4]
+                    and y - elem[6] < position.y < y
+                ):
+                    return elem
+            elif elem[0] == 'deep_line_z':
+                y = elem[5](position.z)
                 if (
                     elem[1] < position.x < elem[2]
                     and elem[3] < position.z < elem[4]
@@ -292,6 +338,8 @@ class Level:
             return Vector3(elem[5] + elem[7] * 0.1, position.y, position.z)
         elif elem[0] == 'deep_line_x':
             return Vector3(position.x, elem[5](position.x), position.z)
+        elif elem[0] == 'deep_line_z':
+            return Vector3(position.x, elem[5](position.z), position.z)
         else:
             raise RuntimeError(f"Invalid level element type: {elem[0]}")
 
