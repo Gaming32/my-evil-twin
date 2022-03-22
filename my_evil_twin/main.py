@@ -115,6 +115,8 @@ on_ground = False
 
 fps_vals = deque(maxlen=240)
 
+keys_pressed: set[int] = set()
+
 mouse_rel = pygame.Vector2()
 while running:
     mouse_rel.update(0, 0)
@@ -126,23 +128,24 @@ while running:
         elif event.type == MOUSEMOTION:
             mouse_rel += event.rel
         elif event.type == KEYDOWN:
-            if event.key == K_w:
-                velocity.z = MOVE_SPEED
-            elif event.key == K_s:
-                velocity.z = -MOVE_SPEED
-            elif event.key == K_a:
-                velocity.x = MOVE_SPEED
-            elif event.key == K_d:
-                velocity.x = -MOVE_SPEED
-            elif event.key == K_SPACE:
+            keys_pressed.add(event.key)
+            if event.key == K_SPACE:
                 if on_ground:
                     velocity.y = JUMP_SPEED
                     on_ground = False
         elif event.type == KEYUP:
-            if event.key in (K_w, K_s):
-                velocity.z = 0
-            elif event.key in (K_a, K_d):
-                velocity.x = 0
+            keys_pressed.discard(event.key)
+
+    velocity.z = 0
+    velocity.x = 0
+    if K_w in keys_pressed:
+        velocity.z += MOVE_SPEED
+    if K_s in keys_pressed:
+        velocity.z -= MOVE_SPEED
+    if K_a in keys_pressed:
+        velocity.x += MOVE_SPEED
+    if K_d in keys_pressed:
+        velocity.x -= MOVE_SPEED
 
     fps = 1 / delta if delta else 1000
     fps_vals.append(fps)
