@@ -64,6 +64,14 @@ LEVEL = Level.parse({
             'y_max': 5,
             'x': -10,
             'direction': 1
+        },
+        {
+            'type': 'deep_line_x',
+            'x_min': -10,
+            'x_max': -5,
+            'z_min': -2,
+            'z_max': 2,
+            'equation': '-x - 5'
         }
     ]
 })
