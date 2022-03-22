@@ -1,9 +1,10 @@
 from typing import Literal, Optional, TypedDict, Union
-from typing_extensions import NotRequired
 
 from OpenGL.GL import *
 from pygame.math import Vector2, Vector3
+from typing_extensions import NotRequired
 
+from my_evil_twin.direction import Direction
 from my_evil_twin.draw import draw_circle, draw_rectangle
 from my_evil_twin.utils import y_to_color
 
@@ -13,7 +14,8 @@ JsonVector3 = tuple[float, float, float]
 Sphere = tuple[Literal['sphere'], Vector3, float]
 Rectangle = tuple[Literal['rectangle'], Vector3, Vector3]
 Floor = tuple[Literal['floor'], Vector2, Vector2, float, float]
-LevelElement = Union[Sphere, Rectangle, Floor]
+WallZ = tuple[Literal['wall_z'], float, float, float, float, float, float, int]
+LevelElement = Union[Sphere, Rectangle, Floor, WallZ]
 
 
 class JsonSphere(TypedDict):
@@ -36,7 +38,18 @@ class JsonFloor(TypedDict):
     thickness: NotRequired[float]
 
 
-JsonElement = Union[JsonSphere, JsonRectangle, JsonFloor]
+class JsonWallZ(TypedDict):
+    type: Literal['wall_z']
+    x_min: float
+    x_max: float
+    y_min: float
+    y_max: float
+    z: float
+    thickness: NotRequired[float]
+    direction: int
+
+
+JsonElement = Union[JsonSphere, JsonRectangle, JsonFloor, JsonWallZ]
 
 
 class LevelJson(TypedDict):
@@ -75,6 +88,17 @@ class Level:
                     element.get('y', 0),
                     element.get('thickness', 1)
                 ))
+            elif element['type'] == 'wall_z':
+                elems.append((
+                    'wall_z',
+                    element['x_min'],
+                    element['x_max'],
+                    element['y_min'],
+                    element['y_max'],
+                    element['z'],
+                    element.get('thickness', 1),
+                    element['direction']
+                ))
         return Level(spheres, elems)
 
     def draw_compile(self):
@@ -92,6 +116,15 @@ class Level:
                 glVertex3f(elem[1].x, elem[3], elem[2].y)
                 glVertex3f(elem[2].x, elem[3], elem[2].y)
                 glVertex3f(elem[2].x, elem[3], elem[1].y)
+                glEnd()
+            elif elem[0] == 'wall_z':
+                glBegin(GL_POLYGON)
+                glColor3f(*y_to_color(elem[3]))
+                glVertex3f(elem[1], elem[3], elem[5])
+                glVertex3f(elem[2], elem[3], elem[5])
+                glColor3f(*y_to_color(elem[4]))
+                glVertex3f(elem[2], elem[4], elem[5])
+                glVertex3f(elem[1], elem[4], elem[5])
                 glEnd()
         glEndList()
 
@@ -120,9 +153,20 @@ class Level:
                     return elem
             elif elem[0] == 'floor':
                 if (
-                    elem[3] - elem[4] < position.y <= elem[3]
+                    elem[3] - elem[4] < position.y < elem[3]
                     and elem[1].x < position.x < elem[2].x
                     and elem[1].y < position.z < elem[2].y
+                ):
+                    return elem
+            elif elem[0] == 'wall_z':
+                if elem[7] < 0:
+                    base = elem[5] - 0.1 < position.z < elem[5] + elem[6]
+                else:
+                    base = elem[5] - elem[6] < position.z < elem[5] + 0.1
+                if (
+                    base
+                    and elem[1] < position.x < elem[2]
+                    and elem[3] - 0.1 < position.y < elem[4]
                 ):
                     return elem
 
@@ -148,6 +192,8 @@ class Level:
             return dest
         elif elem[0] == 'floor':
             return Vector3(position.x, elem[3], position.z)
+        elif elem[0] == 'wall_z':
+            return Vector3(position.x, position.y, elem[5] + elem[7] * 0.1)
         else:
             raise RuntimeError(f"Invalid level element type: {elem[0]}")
 

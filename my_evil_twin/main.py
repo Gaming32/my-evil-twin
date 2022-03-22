@@ -28,7 +28,25 @@ LEVEL = Level.parse({
             'type': 'floor',
             'pos1': (-10, -10),
             'pos2': (10, 10)
-        }
+        },
+        {
+            'type': 'wall_z',
+            'x_min': -10,
+            'x_max': 10,
+            'y_min': 0,
+            'y_max': 5,
+            'z': 10,
+            'direction': -1
+        },
+        # {
+        #     'type': 'wall_z',
+        #     'x_min': -10,
+        #     'x_max': 10,
+        #     'y_min': 0,
+        #     'y_max': 5,
+        #     'z': -10,
+        #     'direction': 1
+        # }
     ]
 })
 
