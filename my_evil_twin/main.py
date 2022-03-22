@@ -144,16 +144,18 @@ while running:
         elif event.type == KEYUP:
             keys_pressed.discard(event.key)
 
-    velocity.z = 0
-    velocity.x = 0
+    movement = pygame.Vector2()
     if K_w in keys_pressed:
-        velocity.z += MOVE_SPEED
+        movement.y = MOVE_SPEED
     if K_s in keys_pressed:
-        velocity.z -= MOVE_SPEED
+        movement.y = -MOVE_SPEED
     if K_a in keys_pressed:
-        velocity.x += MOVE_SPEED
+        movement.x = MOVE_SPEED
     if K_d in keys_pressed:
-        velocity.x -= MOVE_SPEED
+        movement.x = -MOVE_SPEED
+    movement.rotate_ip(rotation.y)
+    velocity.x = movement.x
+    velocity.z = movement.y
 
     fps = 1 / delta if delta else 1000
     fps_vals.append(fps)
@@ -167,7 +169,7 @@ while running:
     elif rotation.x < -90:
         rotation.x = -90
     velocity.y += GRAVITY * delta
-    position += velocity.rotate_y(-rotation.y) * delta
+    position += velocity * delta
     if position.y < -100:
         on_ground = False
         position.update(0, 0, -5)
