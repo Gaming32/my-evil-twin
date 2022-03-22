@@ -204,7 +204,8 @@ while running:
 
     draw_text(f'FPS/MIN: {fps_smooth_value:.1f}/{min_fps:.1f}', 2, 2, Color(255, 255, 255))
     draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
-    draw_text(f'COLLIDING: {collided}', 2, 22, Color(255, 255, 255))
+    draw_text(f'SX/SY/SZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
+    draw_text(f'COLLIDING: {collided}', 2, 32, Color(255, 255, 255))
 
     glDisable(GL_TEXTURE_2D)
     glPopMatrix()

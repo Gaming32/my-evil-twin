@@ -241,7 +241,7 @@ class Level:
                 if (
                     base
                     and elem[1] < position.x < elem[2]
-                    and elem[3] - 0.1 < position.y < elem[4]
+                    and elem[3] - 0.25 < position.y < elem[4]
                 ):
                     return elem
             elif elem[0] == 'wall_x':
@@ -252,7 +252,7 @@ class Level:
                 if (
                     base
                     and elem[1] < position.z < elem[2]
-                    and elem[3] - 0.1 < position.y < elem[4]
+                    and elem[3] - 0.25 < position.y < elem[4]
                 ):
                     return elem
             elif elem[0] == 'deep_line_x':
