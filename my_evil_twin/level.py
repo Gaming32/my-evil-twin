@@ -5,7 +5,7 @@ from pygame.math import Vector2, Vector3
 from typing_extensions import NotRequired
 
 from my_evil_twin.draw import draw_circle, draw_rectangle
-from my_evil_twin.utils import y_to_color
+from my_evil_twin.utils import set_color_offset, y_to_color
 
 JsonVector2 = tuple[float, float]
 JsonVector3 = tuple[float, float, float]
@@ -153,9 +153,10 @@ class Level:
             glDeleteLists(self.draw_list, 1)
         self.draw_list = glGenLists(1)
         glNewList(self.draw_list, GL_COMPILE)
-        for elem in self.elems:
+        for (i, elem) in enumerate(self.elems):
+            set_color_offset(2 * i)
             if elem[0] == 'rectangle':
-                draw_rectangle(elem[1], elem[2])
+                draw_rectangle(elem[1], elem[2], i)
             elif elem[0] == 'floor':
                 glBegin(GL_POLYGON)
                 glColor3f(*y_to_color(elem[3]))
@@ -205,7 +206,8 @@ class Level:
         if self.draw_list is None:
             self.draw_compile()
         glCallList(self.draw_list)
-        for sphere in self.spheres:
+        for (i, sphere) in enumerate(self.spheres):
+            set_color_offset(len(self.elems) + 2 * i)
             draw_circle(sphere[1], rotation, sphere[2], 30)
 
     def close(self) -> None:

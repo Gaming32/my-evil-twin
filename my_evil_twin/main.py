@@ -1,16 +1,13 @@
 from collections import deque
-import colorsys
 
-import numpy as np
 import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
-from my_evil_twin import text_render
 
 from my_evil_twin.consts import FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED, VSYNC
 from my_evil_twin.level import Level
-from my_evil_twin.text_render import draw_text, draw_text_shadow
+from my_evil_twin.text_render import draw_text
 
 LEVEL = Level.parse({
     'elements': [
