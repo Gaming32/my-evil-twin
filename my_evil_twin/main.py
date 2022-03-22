@@ -13,7 +13,7 @@ LEVEL = Level.parse({
     'elements': [
         {
             'type': 'sphere',
-            'center': (4.5, 0.5, 3),
+            'center': (4.5, 1.9, 3),
             'radius': 2
         },
         {
@@ -165,10 +165,18 @@ while running:
         position.update(0, 0, -5)
         velocity.update(0, 0, 0)
         rotation.update(0, 0)
-    collided, position = LEVEL.collide(position)
-    if collided:
-        on_ground = True
+    collided, new_position = LEVEL.collide(position)
+    if new_position.y != position.y:
+        if new_position.y > position.y:
+            on_ground = True
+        position.y = new_position.y
         velocity.y = 0
+    if new_position.x != position.x:
+        position.x = new_position.x
+        velocity.x = 0
+    if new_position.z != position.z:
+        position.z = new_position.z
+        velocity.z = 0
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
 
@@ -196,6 +204,7 @@ while running:
 
     draw_text(f'FPS/MIN: {fps_smooth_value:.1f}/{min_fps:.1f}', 2, 2, Color(255, 255, 255))
     draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
+    draw_text(f'COLLIDING: {collided}', 2, 22, Color(255, 255, 255))
 
     glDisable(GL_TEXTURE_2D)
     glPopMatrix()
