@@ -46,6 +46,24 @@ LEVEL = Level.parse({
             'y_max': 5,
             'z': -10,
             'direction': 1
+        },
+        {
+            'type': 'wall_x',
+            'z_min': -10,
+            'z_max': 10,
+            'y_min': 0,
+            'y_max': 5,
+            'x': 10,
+            'direction': -1
+        },
+        {
+            'type': 'wall_x',
+            'z_min': -10,
+            'z_max': 10,
+            'y_min': 0,
+            'y_max': 5,
+            'x': -10,
+            'direction': 1
         }
     ]
 })
