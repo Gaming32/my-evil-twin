@@ -97,7 +97,7 @@ def resize_view(width: int, height: int) -> None:
 
 pygame.init()
 
-window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF, vsync=VSYNC)
+window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF | RESIZABLE, vsync=VSYNC)
 pygame.display.set_caption('My Evil Twin')
 
 resize_view(window.get_width(), window.get_height())
@@ -150,10 +150,15 @@ while running:
                 mouse_owned = False
         elif event.type == KEYUP:
             keys_pressed.discard(event.key)
+            if event.key == K_F11:
+                pygame.display.toggle_fullscreen()
+                resize_view(window.get_width(), window.get_height())
         elif event.type == MOUSEBUTTONDOWN:
             pygame.event.set_grab(True)
             pygame.mouse.set_visible(False)
             mouse_owned = True
+        elif event.type == VIDEORESIZE:
+            resize_view(event.w, event.h)
 
     movement = pygame.Vector2()
     if K_w in keys_pressed:
