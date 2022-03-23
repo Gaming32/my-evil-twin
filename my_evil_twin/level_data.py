@@ -77,6 +77,7 @@ TEST_LEVEL = Level.parse({
 
 
 LEVEL = Level.parse({
+    'spawn': (15, 1, -25),
     'elements': [
         ## MAIN AREA
         {

@@ -87,6 +87,7 @@ JsonElement = Optional[Union[JsonSphere, JsonRectangle, JsonFloor, JsonWallZ, Js
 
 
 class LevelJson(TypedDict):
+    spawn: NotRequired[Union[JsonVector3, JsonVector2]]
     elements: list[JsonElement]
 
 
@@ -98,14 +99,23 @@ class Level:
     spheres: list[Sphere]
     elems: list[LevelElement]
     draw_list: Optional[int]
+    spawn: Vector3
 
-    def __init__(self, spheres: list[Sphere], elems: list[LevelElement]) -> None:
+    def __init__(self, spheres: list[Sphere], elems: list[LevelElement], spawn: Vector3) -> None:
         self.spheres = spheres
         self.elems = elems
         self.draw_list = None
+        self.spawn = spawn
 
     @classmethod
     def parse(cls, level: LevelJson) -> 'Level':
+        if 'spawn' in level:
+            if len(level['spawn']) == 3:
+                spawn = Vector3(level['spawn'])
+            else:
+                spawn = Vector3(level['spawn'][0], 0, level['spawn'][1])
+        else:
+            spawn = Vector3(0, 0, -5)
         elements = level['elements']
         spheres: list[Sphere] = []
         elems: list[LevelElement] = []
@@ -171,7 +181,7 @@ class Level:
                     compile_to_function(element['equation']),
                     element.get('thickness', 1)
                 ))
-        return Level(spheres, elems)
+        return Level(spheres, elems, spawn)
 
     def draw_compile(self):
         if self.draw_list is not None:

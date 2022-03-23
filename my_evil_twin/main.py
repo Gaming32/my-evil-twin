@@ -40,7 +40,7 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 rotation = pygame.Vector2()
 velocity = pygame.Vector3()
-position = pygame.Vector3(0, 0, -5)
+position = LEVEL.spawn.copy()
 
 pygame.event.set_grab(True)
 pygame.mouse.set_visible(False)
@@ -131,7 +131,7 @@ while running:
         position[i] += velocity[i] * delta
         if position.y < -100:
             on_ground = False
-            position.update(0, 0, -5)
+            position.update(LEVEL.spawn)
             velocity.update(0, 0, 0)
             rotation.update(0, 0)
         collided_this_time, new_position = LEVEL.collide(position)
