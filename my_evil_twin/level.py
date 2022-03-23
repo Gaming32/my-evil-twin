@@ -10,6 +10,7 @@ from my_evil_twin.utils import set_color_offset, y_to_color
 JsonVector2 = tuple[float, float]
 JsonVector3 = tuple[float, float, float]
 
+Empty = tuple[None]
 Sphere = tuple[Literal['sphere'], Vector3, float]
 Rectangle = tuple[Literal['rectangle'], Vector3, Vector3]
 Floor = tuple[Literal['floor'], Vector2, Vector2, float, float]
@@ -17,7 +18,7 @@ WallZ = tuple[Literal['wall_z'], float, float, float, float, float, float, int]
 WallX = tuple[Literal['wall_x'], float, float, float, float, float, float, int]
 DeepLineX = tuple[Literal['deep_line_x'], float, float, float, float, Callable[[float], float], float]
 DeepLineZ = tuple[Literal['deep_line_z'], float, float, float, float, Callable[[float], float], float]
-LevelElement = Union[Sphere, Rectangle, Floor, WallZ, WallX, DeepLineX, DeepLineZ]
+LevelElement = Optional[Union[Sphere, Rectangle, Floor, WallZ, WallX, DeepLineX, DeepLineZ]]
 
 
 class JsonSphere(TypedDict):
@@ -82,7 +83,7 @@ class JsonDeepLineZ(TypedDict):
     thickness: NotRequired[float]
 
 
-JsonElement = Union[JsonSphere, JsonRectangle, JsonFloor, JsonWallZ, JsonWallX, JsonDeepLineX, JsonDeepLineZ]
+JsonElement = Optional[Union[JsonSphere, JsonRectangle, JsonFloor, JsonWallZ, JsonWallX, JsonDeepLineX, JsonDeepLineZ]]
 
 
 class LevelJson(TypedDict):
@@ -109,6 +110,9 @@ class Level:
         spheres: list[Sphere] = []
         elems: list[LevelElement] = []
         for element in elements:
+            if element is None:
+                elems.append(None)
+                continue
             if element['type'] == 'sphere':
                 spheres.append(('sphere', Vector3(element['center']), element['radius']))
             elif element['type'] == 'rectangle':
@@ -175,6 +179,8 @@ class Level:
         self.draw_list = glGenLists(1)
         glNewList(self.draw_list, GL_COMPILE)
         for (i, elem) in enumerate(self.elems):
+            if elem is None:
+                continue
             set_color_offset(2 * i)
             if elem[0] == 'rectangle':
                 draw_rectangle(elem[1], elem[2], i)
@@ -258,6 +264,8 @@ class Level:
             if sphere[1].distance_squared_to(position) < sphere[2] * sphere[2]:
                 return sphere
         for elem in self.elems:
+            if elem is None:
+                continue
             if elem[0] == 'rectangle':
                 if (
                     elem[1].x < position.x < elem[2].x
@@ -312,6 +320,8 @@ class Level:
                     return elem
 
     def move_out_of_collision(self, elem: LevelElement, position: Vector3) -> Vector3:
+        if elem is None:
+            return position
         if elem[0] == 'sphere':
             rel = (position - elem[1]).normalize()
             return elem[1] + rel * elem[2]
