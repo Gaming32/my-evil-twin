@@ -115,6 +115,7 @@ position = pygame.Vector3(0, 0, -5)
 
 pygame.event.set_grab(True)
 pygame.mouse.set_visible(False)
+mouse_owned = True
 
 clock = pygame.time.Clock()
 
@@ -135,15 +136,24 @@ while running:
         if event.type == QUIT:
             running = False
         elif event.type == MOUSEMOTION:
-            mouse_rel += event.rel
+            if mouse_owned:
+                mouse_rel += event.rel
         elif event.type == KEYDOWN:
             keys_pressed.add(event.key)
             if event.key == K_SPACE:
                 if on_ground:
                     velocity.y = JUMP_SPEED
                     on_ground = False
+            elif event.key == K_ESCAPE:
+                pygame.mouse.set_visible(True)
+                pygame.event.set_grab(False)
+                mouse_owned = False
         elif event.type == KEYUP:
             keys_pressed.discard(event.key)
+        elif event.type == MOUSEBUTTONDOWN:
+            pygame.event.set_grab(True)
+            pygame.mouse.set_visible(False)
+            mouse_owned = True
 
     movement = pygame.Vector2()
     if K_w in keys_pressed:
@@ -172,7 +182,7 @@ while running:
 
     velocity.y += GRAVITY * delta
 
-    collided = False # Definitely always bound, but Pylance doesn't seem to know that
+    collided = False
     for i in range(3):
         position[i] += velocity[i] * delta
         if position.y < -100:
@@ -180,20 +190,24 @@ while running:
             position.update(0, 0, -5)
             velocity.update(0, 0, 0)
             rotation.update(0, 0)
-        collided, new_position = LEVEL.collide(position)
-        if new_position.y != position.y:
-            if new_position.y > position.y:
-                on_ground = True
-            position.y = new_position.y
-            velocity.y = 0
-        else:
-            on_ground = False
-        if new_position.x != position.x:
-            position.x = new_position.x
-            velocity.x = 0
-        if new_position.z != position.z:
-            position.z = new_position.z
-            velocity.z = 0
+        collided_this_time, new_position = LEVEL.collide(position)
+        collided = collided or collided_this_time
+        if i == 1:
+            if new_position.y != position.y:
+                if new_position.y > position.y:
+                    on_ground = True
+                position.y = new_position.y
+                velocity.y = 0
+            else:
+                on_ground = False
+        if i == 0:
+            if new_position.x != position.x:
+                position.x = new_position.x
+                velocity.x = 0
+        if i == 2:
+            if new_position.z != position.z:
+                position.z = new_position.z
+                velocity.z = 0
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
 
