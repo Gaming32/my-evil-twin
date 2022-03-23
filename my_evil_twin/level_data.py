@@ -82,16 +82,17 @@ LEVEL = Level.parse({
         None, # Color separator
         {
             'type': 'floor',
-            'pos1': (-100, -100),
-            'pos2': (100, 100)
+            'pos1': (-20, -35),
+            'pos2': (20, 35)
         },
         ## END MAIN AREA
 
         ## P1 AREA
+        # Ground stuff
         {
             'type': 'wall_z',
             'x_min': -20,
-            'x_max': 5,
+            'x_max': 10,
             'y_min': 0,
             'y_max': 5,
             'z': -20,
@@ -112,16 +113,86 @@ LEVEL = Level.parse({
             'z_max': -20,
             'y_min': 0,
             'y_max': 5,
-            'x': 5,
+            'x': 10,
             'direction': 1
         },
         {
             'type': 'wall_z',
-            'x_min': 5,
+            'x_min': 10,
             'x_max': 20,
             'y_min': 0,
             'y_max': 5,
             'z': -35,
+            'direction': 1
+        },
+        {
+            'type': 'deep_line_z',
+            'x_min': 16,
+            'x_max': 20,
+            'z_min': -35,
+            'z_max': -30,
+            'equation': '-x - 30'
+        },
+        # Second floor ground
+        {
+            'type': 'floor',
+            'pos1': (10, -39),
+            'pos2': (20, -35),
+            'y': 5
+        },
+        {
+            'type': 'floor',
+            'pos1': (20, -39),
+            'pos2': (24, 24),
+            'y': 5
+        },
+        {
+            'type': 'floor',
+            'pos1': (6, -39),
+            'pos2': (10, -20),
+            'y': 5
+        },
+        {
+            'type': 'floor',
+            'pos1': (-20, -24),
+            'pos2': (6, -20),
+            'y': 5
+        },
+        # Second floor walls
+        {
+            'type': 'wall_z',
+            'x_min': 6,
+            'x_max': 24,
+            'y_min': 5,
+            'y_max': 10,
+            'z': -39,
+            'direction': 1
+        },
+        {
+            'type': 'wall_x',
+            'z_min': -39,
+            'z_max': 24,
+            'y_min': 5,
+            'y_max': 10,
+            'x': 24,
+            'direction': -1
+        },
+        {
+            'type': 'wall_x',
+            'z_min': -39,
+            'z_max': -24,
+            'y_min': 5,
+            'y_max': 10,
+            'x': 6,
+            'direction': 1
+        },
+        {
+            'type': 'wall_z',
+            'x_min': -24,
+            'x_max': 6,
+            'y_min': 5,
+            'y_max': 10,
+            'z': -24,
             'direction': 1
         },
         ## END P1 AREA
@@ -149,11 +220,11 @@ LEVEL = Level.parse({
 
         {
             'type': 'deep_line_x',
-            'x_min': -10,
+            'x_min': -11,
             'x_max': -5,
             'z_min': -2,
             'z_max': 2,
-            'equation': '-x - 5'
+            'equation': '-2.2 * x - 11'
         }
     ]
 })

@@ -8,7 +8,6 @@ from pygame.locals import *
 from my_evil_twin.consts import (FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED,
                                  TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists
-from my_evil_twin.level import Level
 from my_evil_twin.level_data import LEVEL
 from my_evil_twin.text_render import draw_text
 
@@ -35,7 +34,6 @@ resize_view(window.get_width(), window.get_height())
 LEVEL.draw_compile()
 
 glClearColor(0.5, 0.5, 1.0, 1.0)
-# glEnable(GL_MULTISAMPLE) # TBD
 glEnable(GL_BLEND)
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 

@@ -282,24 +282,24 @@ class Level:
                     return elem
             elif elem[0] == 'wall_z':
                 if elem[7] < 0:
-                    base = elem[5] - 0.1 < position.z < elem[5] + elem[6]
+                    check = elem[5] - 0.1 < position.z < elem[5] + elem[6]
                 else:
-                    base = elem[5] - elem[6] < position.z < elem[5] + 0.1
+                    check = elem[5] - elem[6] < position.z < elem[5] + 0.1
                 if (
-                    base
+                    check
                     and elem[1] < position.x < elem[2]
-                    and elem[3] - 0.1 < position.y < elem[4]
+                    and elem[3] - 0.1 < position.y < elem[4] - 0.1
                 ):
                     return elem
             elif elem[0] == 'wall_x':
                 if elem[7] < 0:
-                    base = elem[5] - 0.1 < position.x < elem[5] + elem[6]
+                    check = elem[5] - 0.1 < position.x < elem[5] + elem[6]
                 else:
-                    base = elem[5] - elem[6] < position.x < elem[5] + 0.1
+                    check = elem[5] - elem[6] < position.x < elem[5] + 0.1
                 if (
-                    base
-                    and elem[1] < position.z < elem[2]
-                    and elem[3] - 0.1 < position.y < elem[4]
+                    elem[1] < position.z < elem[2]
+                    and elem[3] - 0.1 < position.y < elem[4] - 0.1
+                    and check
                 ):
                     return elem
             elif elem[0] == 'deep_line_x':
