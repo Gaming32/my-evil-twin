@@ -163,13 +163,13 @@ while running:
 
     movement = pygame.Vector2()
     if K_w in keys_pressed:
-        movement.y = MOVE_SPEED
+        movement.y += MOVE_SPEED
     if K_s in keys_pressed:
-        movement.y = -MOVE_SPEED
+        movement.y -= MOVE_SPEED
     if K_a in keys_pressed:
-        movement.x = MOVE_SPEED
+        movement.x += MOVE_SPEED
     if K_d in keys_pressed:
-        movement.x = -MOVE_SPEED
+        movement.x -= MOVE_SPEED
     movement.rotate_ip(rotation.y)
     velocity.x = movement.x
     velocity.z = movement.y
