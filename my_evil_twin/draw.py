@@ -1,11 +1,14 @@
 import math
+from typing import cast
 
 from OpenGL.GL import *
+from OpenGL.GLU import *
 from pygame.math import Vector2, Vector3
 
 from my_evil_twin.utils import y_to_color
 
 FULL_CIRCLE = 2 * math.pi
+_circle_display_lists: dict[tuple[float, int, int], int] = {}
 
 
 def draw_rectangle(pos1: Vector3, pos2: Vector3, color: int = 0) -> None:
@@ -74,7 +77,14 @@ def draw_circle(center: Vector3, rotation: Vector2, radius: float, resolution: i
     glRotatef(-rotation.y - 180, 0, 1, 0)
     glRotatef(-rotation.x, 1, 0, 0)
 
-    _draw_circle(center, radius, resolution, color)
+    lists_key = (radius, resolution, color)
+    if lists_key not in _circle_display_lists:
+        display_list = cast(int, glGenLists(1))
+        glNewList(display_list, GL_COMPILE)
+        _draw_circle(center, radius, resolution, color)
+        glEndList()
+        _circle_display_lists[lists_key] = display_list
+    glCallList(_circle_display_lists[lists_key])
 
     glPopMatrix()
 
@@ -91,3 +101,9 @@ def _draw_circle(center: Vector3, radius: float, resolution: int, color: int) ->
         glVertex2f(x, y)
         angle += angle_change
     glEnd()
+
+
+def clear_circle_display_lists() -> None:
+    for lists_key in _circle_display_lists:
+        glDeleteLists(_circle_display_lists[lists_key], 1)
+    _circle_display_lists.clear()

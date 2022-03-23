@@ -7,6 +7,7 @@ from pygame.locals import *
 
 from my_evil_twin.consts import (FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED,
                                  TURN_SPEED, VSYNC)
+from my_evil_twin.draw import clear_circle_display_lists
 from my_evil_twin.level import Level
 from my_evil_twin.text_render import draw_text
 
@@ -231,7 +232,7 @@ while running:
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
     glLoadIdentity()
-    glOrtho(0, 320, 180, 0, 100, 300)
+    glOrtho(0, screen_size.x / 4, screen_size.y / 4, 0, 100, 300)
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
     glLoadIdentity()
@@ -240,7 +241,7 @@ while running:
 
     draw_text(f'FPS/MIN: {fps_smooth_value:.1f}/{min_fps:.1f}', 2, 2, Color(255, 255, 255))
     draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
-    draw_text(f'SX/SY/SZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
+    draw_text(f'VX/VY/VZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
     draw_text(f'COLLIDING/GROUND: {collided}/{on_ground}', 2, 32, Color(255, 255, 255))
 
     glDisable(GL_TEXTURE_2D)
@@ -252,4 +253,5 @@ while running:
 
 
 LEVEL.close()
+clear_circle_display_lists()
 pygame.quit()

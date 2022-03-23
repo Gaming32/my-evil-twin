@@ -246,6 +246,7 @@ class Level:
         glCallList(self.draw_list)
         for (i, sphere) in enumerate(self.spheres):
             set_color_offset(len(self.elems) + 2 * i)
+            # draw_a_sphere(sphere[1], sphere[2])
             draw_circle(sphere[1], rotation, sphere[2], 30)
 
     def close(self) -> None:
