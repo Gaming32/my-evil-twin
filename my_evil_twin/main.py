@@ -5,7 +5,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
 
-from my_evil_twin.consts import FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED, TURN_SPEED, VSYNC
+from my_evil_twin.consts import (FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED,
+                                 TURN_SPEED, VSYNC)
 from my_evil_twin.level import Level
 from my_evil_twin.text_render import draw_text
 
@@ -168,25 +169,31 @@ while running:
         rotation.x = 90
     elif rotation.x < -90:
         rotation.x = -90
+
     velocity.y += GRAVITY * delta
-    position += velocity * delta
-    if position.y < -100:
-        on_ground = False
-        position.update(0, 0, -5)
-        velocity.update(0, 0, 0)
-        rotation.update(0, 0)
-    collided, new_position = LEVEL.collide(position)
-    if new_position.y != position.y:
-        if new_position.y > position.y:
-            on_ground = True
-        position.y = new_position.y
-        velocity.y = 0
-    if new_position.x != position.x:
-        position.x = new_position.x
-        velocity.x = 0
-    if new_position.z != position.z:
-        position.z = new_position.z
-        velocity.z = 0
+
+    collided = False # Definitely always bound, but Pylance doesn't seem to know that
+    for i in range(3):
+        position[i] += velocity[i] * delta
+        if position.y < -100:
+            on_ground = False
+            position.update(0, 0, -5)
+            velocity.update(0, 0, 0)
+            rotation.update(0, 0)
+        collided, new_position = LEVEL.collide(position)
+        if new_position.y != position.y:
+            if new_position.y > position.y:
+                on_ground = True
+            position.y = new_position.y
+            velocity.y = 0
+        else:
+            on_ground = False
+        if new_position.x != position.x:
+            position.x = new_position.x
+            velocity.x = 0
+        if new_position.z != position.z:
+            position.z = new_position.z
+            velocity.z = 0
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
 
@@ -215,7 +222,7 @@ while running:
     draw_text(f'FPS/MIN: {fps_smooth_value:.1f}/{min_fps:.1f}', 2, 2, Color(255, 255, 255))
     draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
     draw_text(f'SX/SY/SZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
-    draw_text(f'COLLIDING: {collided}', 2, 32, Color(255, 255, 255))
+    draw_text(f'COLLIDING/GROUND: {collided}/{on_ground}', 2, 32, Color(255, 255, 255))
 
     glDisable(GL_TEXTURE_2D)
     glPopMatrix()
