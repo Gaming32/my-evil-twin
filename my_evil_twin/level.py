@@ -5,7 +5,7 @@ from pygame.math import Vector2, Vector3
 from typing_extensions import NotRequired
 
 from my_evil_twin.draw import draw_circle, draw_rectangle
-from my_evil_twin.utils import set_color_offset, y_to_color
+from my_evil_twin.utils import set_local_color_offset, y_to_color
 
 JsonVector2 = tuple[float, float]
 JsonVector3 = tuple[float, float, float]
@@ -181,7 +181,7 @@ class Level:
         for (i, elem) in enumerate(self.elems):
             if elem is None:
                 continue
-            set_color_offset(2 * i)
+            set_local_color_offset(2 * i)
             if elem[0] == 'rectangle':
                 draw_rectangle(elem[1], elem[2], i)
             elif elem[0] == 'floor':
@@ -251,13 +251,16 @@ class Level:
             self.draw_compile()
         glCallList(self.draw_list)
         for (i, sphere) in enumerate(self.spheres):
-            set_color_offset(len(self.elems) + 2 * i)
-            # draw_a_sphere(sphere[1], sphere[2])
+            set_local_color_offset(len(self.elems) + 2 * i)
             draw_circle(sphere[1], rotation, sphere[2], 30)
 
-    def close(self) -> None:
+    def reset_draw_list(self) -> None:
         if self.draw_list is not None:
             glDeleteLists(self.draw_list, 1)
+        self.draw_list = None
+
+    def close(self) -> None:
+        self.reset_draw_list()
 
     def is_colliding(self, position: Vector3) -> Optional[LevelElement]:
         for sphere in self.spheres:
@@ -268,9 +271,9 @@ class Level:
                 continue
             if elem[0] == 'rectangle':
                 if (
-                    elem[1].x < position.x < elem[2].x
+                    elem[1].x - 0.1 < position.x < elem[2].x + 0.1
                     and elem[1].y <= position.y < elem[2].y
-                    and elem[1].z < position.z < elem[2].z
+                    and elem[1].z - 0.1 < position.z < elem[2].z + 0.1
                 ):
                     return elem
             elif elem[0] == 'floor':
@@ -329,16 +332,16 @@ class Level:
             dest = Vector3(position.x, elem[2].y, position.z)
             dist = elem[2].y - position.y
             if position.x - elem[1].x < dist:
-                dest = Vector3(elem[1].x, position.y, position.z)
+                dest = Vector3(elem[1].x - 0.1, position.y, position.z)
                 dist = position.x - elem[1].x
             if elem[2].x - position.x < dist:
-                dest = Vector3(elem[2].x, position.y, position.z)
+                dest = Vector3(elem[2].x + 0.1, position.y, position.z)
                 dist = elem[2].x - position.x
             if position.z - elem[1].z < dist:
-                dest = Vector3(position.x, position.y, elem[1].z)
+                dest = Vector3(position.x, position.y, elem[1].z - 0.1)
                 dist = position.z - elem[1].z
             if elem[2].z - position.z < dist:
-                dest = Vector3(position.x, position.y, elem[2].z)
+                dest = Vector3(position.x, position.y, elem[2].z + 0.1)
                 dist = elem[2].z - position.z
             return dest
         elif elem[0] == 'floor':

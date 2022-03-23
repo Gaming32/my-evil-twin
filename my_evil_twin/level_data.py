@@ -79,7 +79,6 @@ TEST_LEVEL = Level.parse({
 LEVEL = Level.parse({
     'elements': [
         ## MAIN AREA
-        None, # Color separator
         {
             'type': 'floor',
             'pos1': (-20, -35),
@@ -306,6 +305,41 @@ LEVEL = Level.parse({
             'direction': -1
         },
         ## END P2 AREA
+
+        ## RANDOM OBSTICLES
+        # P1
+        {
+            'type': 'rectangle',
+            'pos1': (-15, 0, -12),
+            'pos2': (-10, 3.5, -10)
+        },
+        {
+            'type': 'rectangle',
+            'pos1': (-5, 0, -17),
+            'pos2': (-3, 2.5, -14)
+        },
+        {
+            'type': 'rectangle',
+            'pos1': (5, 0, -9),
+            'pos2': (9, 2, -4)
+        },
+        # P2
+        {
+            'type': 'rectangle',
+            'pos1': (10, 0, 10),
+            'pos2': (15, 3.5, 12)
+        },
+        {
+            'type': 'rectangle',
+            'pos1': (3, 0, 14),
+            'pos2': (5, 2.5, 17)
+        },
+        {
+            'type': 'rectangle',
+            'pos1': (-9, 0, 4),
+            'pos2': (-5, 2, 9)
+        },
+        ## END RANDOM OBSTICLES
 
         # {
         #     'type': 'deep_line_x',

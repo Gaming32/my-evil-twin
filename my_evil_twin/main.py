@@ -10,6 +10,7 @@ from my_evil_twin.consts import (FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED,
 from my_evil_twin.draw import clear_circle_display_lists
 from my_evil_twin.level_data import LEVEL
 from my_evil_twin.text_render import draw_text
+from my_evil_twin.utils import get_global_color_offset, set_global_color_offset
 
 screen_size = pygame.Vector2()
 
@@ -76,6 +77,16 @@ while running:
                 pygame.mouse.set_visible(True)
                 pygame.event.set_grab(False)
                 mouse_owned = False
+            elif event.key == K_EQUALS:
+                set_global_color_offset(get_global_color_offset() + 1)
+                LEVEL.reset_draw_list()
+                clear_circle_display_lists()
+                LEVEL.draw_compile()
+            elif event.key == K_MINUS:
+                set_global_color_offset(get_global_color_offset() - 1)
+                LEVEL.reset_draw_list()
+                clear_circle_display_lists()
+                LEVEL.draw_compile()
         elif event.type == KEYUP:
             keys_pressed.discard(event.key)
             if event.key == K_F11:
