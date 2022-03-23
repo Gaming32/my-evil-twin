@@ -7,7 +7,7 @@ from pygame.locals import *
 
 from my_evil_twin.consts import (FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED,
                                  TURN_SPEED, VSYNC)
-from my_evil_twin.draw import clear_circle_display_lists
+from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
 from my_evil_twin.text_render import draw_text
 from my_evil_twin.utils import get_global_color_offset, set_global_color_offset
@@ -23,6 +23,20 @@ def resize_view(width: int, height: int) -> None:
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(80, ratio, 0.01, 1000)
+
+
+def respawn():
+    global on_ground
+    on_ground = False
+    position.update(LEVEL.spawn)
+    velocity.update(0, 0, 0)
+    rotation.update(0, 0)
+
+
+def redraw_level():
+    LEVEL.reset_draw_list()
+    clear_circle_display_lists()
+    LEVEL.draw_compile()
 
 
 pygame.init()
@@ -60,7 +74,8 @@ mouse_rel = pygame.Vector2()
 while running:
     mouse_rel.update(0, 0)
 
-    delta = clock.tick(FPS) / 1000.0
+    raw_delta = clock.tick(FPS) / 1000.0
+    delta = min(raw_delta, 0.05)
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
@@ -79,14 +94,12 @@ while running:
                 mouse_owned = False
             elif event.key == K_EQUALS:
                 set_global_color_offset(get_global_color_offset() + 1)
-                LEVEL.reset_draw_list()
-                clear_circle_display_lists()
-                LEVEL.draw_compile()
+                redraw_level()
             elif event.key == K_MINUS:
                 set_global_color_offset(get_global_color_offset() - 1)
-                LEVEL.reset_draw_list()
-                clear_circle_display_lists()
-                LEVEL.draw_compile()
+                redraw_level()
+            elif event.key == K_r:
+                respawn()
         elif event.type == KEYUP:
             keys_pressed.discard(event.key)
             if event.key == K_F11:
@@ -112,7 +125,7 @@ while running:
     velocity.x = movement.x
     velocity.z = movement.y
 
-    fps = 1 / delta if delta else 1000
+    fps = 1 / raw_delta if raw_delta else 1000
     fps_vals.append(fps)
     fps_smooth_value = sum(fps_vals) / len(fps_vals)
     min_fps = min(fps_vals)
@@ -130,10 +143,7 @@ while running:
     for i in range(3):
         position[i] += velocity[i] * delta
         if position.y < -100:
-            on_ground = False
-            position.update(LEVEL.spawn)
-            velocity.update(0, 0, 0)
-            rotation.update(0, 0)
+            respawn()
         collided_this_time, new_position = LEVEL.collide(position)
         collided = collided or collided_this_time
         if i == 1:
@@ -165,6 +175,8 @@ while running:
     glEnable(GL_DEPTH_TEST)
 
     LEVEL.draw(rotation)
+    other_pos = pygame.Vector3(-position.x - 0.3, position.y, -position.z - 0.3)
+    draw_rectangle(other_pos, other_pos + pygame.Vector3(0.6, 2.0, 0.6))
 
     glClear(GL_DEPTH_BUFFER_BIT)
     glMatrixMode(GL_PROJECTION)

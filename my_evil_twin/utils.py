@@ -20,6 +20,7 @@ def set_global_color_offset(offset: float) -> None:
 def get_local_color_offset() -> float:
     return _local_color_offset
 
+
 def set_local_color_offset(offset: float) -> None:
     global _local_color_offset
     _local_color_offset = offset
