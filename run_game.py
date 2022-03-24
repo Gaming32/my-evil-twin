@@ -7,7 +7,7 @@ if sys.version_info < (3, 9):
     sys.exit(1)
 
 DEPENCENCIES: list[tuple[str, str]] = [
-    ('pygame', 'pygame'),
+    # pygame requires special code to check the version
     ('OpenGL', 'pyopengl'),
     ('OpenGL_accelerate', 'pyopengl-accelerate'),
     ('numpy', 'numpy'),
@@ -23,6 +23,14 @@ for dep in DEPENCENCIES:
         __import__(dep[0])
     except ImportError:
         missing_dependencies.append(dep[1])
+
+try:
+    import pygame
+except ImportError:
+    missing_dependencies.append('pygame>=2.1.1')
+else:
+    if pygame.version.vernum < (2, 1, 1):
+        missing_dependencies.append('pygame>=2.1.1')
 
 try:
     from typing_extensions import NotRequired
@@ -45,5 +53,7 @@ if missing_dependencies:
         if not answer or answer[0] != 'y':
             print('Ok, cancelling.')
             sys.exit(1)
+    for dep in DEPENCENCIES:
+        sys.modules.pop(dep[0])
 
 import my_evil_twin.main
