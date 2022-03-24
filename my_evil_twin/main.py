@@ -39,6 +39,14 @@ def redraw_level():
     LEVEL.draw_compile()
 
 
+try:
+    import OpenGL_accelerate
+except ImportError:
+    print('PyOpenGL-accelerate is not installed. It is highly '
+          'recommended that you install it, as it will significantly '
+          'increase your framerate.')
+
+
 pygame.init()
 
 window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF | RESIZABLE, vsync=VSYNC)

@@ -1,6 +1,5 @@
 pygame>=2.1.1
 pyopengl
-pyopengl-accelerate
 numpy
 typing-extensions>=4.1.0
 pillow

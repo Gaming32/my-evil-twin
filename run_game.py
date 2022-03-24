@@ -9,7 +9,6 @@ if sys.version_info < (3, 9):
 DEPENCENCIES: list[tuple[str, str]] = [
     # pygame requires special code to check the version
     ('OpenGL', 'pyopengl'),
-    ('OpenGL_accelerate', 'pyopengl-accelerate'),
     ('numpy', 'numpy'),
     # typing-extensions requires special code to check the version
     ('PIL', 'pillow')
