@@ -183,8 +183,10 @@ while running:
     glEnable(GL_DEPTH_TEST)
 
     LEVEL.draw(rotation)
-    other_pos = pygame.Vector3(-position.x - 0.3, position.y, -position.z - 0.3)
-    draw_rectangle(other_pos, other_pos + pygame.Vector3(0.6, 2.0, 0.6))
+    other_pos = pygame.Vector3(-position.x, position.y, -position.z)
+    draw_rectangle(other_pos - pygame.Vector3(0.3, 0.0, 0.3), other_pos + pygame.Vector3(0.3, 2.0, 0.3))
+    if other_pos.xz.distance_squared_to(position.xz) < 0.36:
+        respawn()
 
     glClear(GL_DEPTH_BUFFER_BIT)
     glMatrixMode(GL_PROJECTION)
