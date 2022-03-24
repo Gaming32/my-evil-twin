@@ -44,7 +44,7 @@ if missing_dependencies:
     answer = input('Would you like to install them? [Y/n] ').lower()
     if not answer or answer[0] != 'n':
         import subprocess
-        result = subprocess.run(['pip', 'install'] + missing_dependencies)
+        result = subprocess.run(['pip', 'install', '--upgrade'] + missing_dependencies)
         if result.returncode:
             print('Failed to install dependencies.')
             sys.exit(1)
@@ -54,6 +54,6 @@ if missing_dependencies:
             print('Ok, cancelling.')
             sys.exit(1)
     for dep in DEPENCENCIES:
-        sys.modules.pop(dep[0])
+        sys.modules.pop(dep[0], None)
 
 import my_evil_twin.main
