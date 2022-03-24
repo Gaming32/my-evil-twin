@@ -15,7 +15,10 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install Dependencies
         run: python -m pip install -Ur requirements.txt
+      - name: Install PyOpenGL-accelerate
+        continue-on-error: true
+        run: python -m pip install -U PyOpenGL-accelerate
       - name: Install Pyright
         run: python -m pip install -U pyright
       - name: Test with Pyright
-        run: pyright --lib my_evil_twin
+        run: pyright --lib my_evil_twin run_game.py
