@@ -40,7 +40,7 @@ def redraw_level():
 
 
 try:
-    import OpenGL_accelerate # # pyright: ignore [reportMissingImports]
+    import OpenGL_accelerate # pyright: ignore [reportMissingImports]
 except ImportError:
     print('PyOpenGL-accelerate is not installed. It is highly '
           'recommended that you install it, as it will significantly '
