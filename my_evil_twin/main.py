@@ -1,11 +1,12 @@
 from collections import deque
+import random
 
 import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
 
-from my_evil_twin.consts import (FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED,
+from my_evil_twin.consts import (ENEMY_COUNT, FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED,
                                  TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
@@ -47,6 +48,9 @@ except ImportError:
           'increase your framerate.')
 
 
+enemies = [pygame.Vector3(random.uniform(-20, 20), 10, random.uniform(-35, 35)) for _ in range(ENEMY_COUNT)]
+
+
 pygame.init()
 
 window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF | RESIZABLE, vsync=VSYNC)
@@ -59,6 +63,7 @@ LEVEL.draw_compile()
 glClearColor(0.5, 0.5, 1.0, 1.0)
 glEnable(GL_BLEND)
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+glEnable(GL_DEPTH_TEST)
 
 rotation = pygame.Vector2()
 velocity = pygame.Vector3()
@@ -173,26 +178,26 @@ while running:
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
 
+    ## DRAW WORLD
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
     glRotatef(rotation.x, 1, 0, 0)
     glRotatef(rotation.y + 180, 0, 1, 0)
     glTranslatef(-position.x, -position.y - 1.8, -position.z)
 
-    glDepthMask(True)
-    glEnable(GL_DEPTH_TEST)
-
     LEVEL.draw(rotation)
-    other_pos = pygame.Vector3(-position.x, position.y, -position.z)
-    draw_rectangle(other_pos - pygame.Vector3(0.3, 0.0, 0.3), other_pos + pygame.Vector3(0.3, 2.0, 0.3))
-    if other_pos.xz.distance_squared_to(position.xz) < 0.36:
-        respawn()
+    for enemy in enemies:
+        draw_rectangle(enemy - pygame.Vector3(0.3, 1.0, 0.3), enemy + pygame.Vector3(0.3, 1.0, 0.3))
+    ## END DRAW WORLD
 
+    ## DRAW HUD
+    w, h = screen_size.x / 4, screen_size.y / 4
+    cx, cy = w / 2, h / 2
     glClear(GL_DEPTH_BUFFER_BIT)
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
     glLoadIdentity()
-    glOrtho(0, screen_size.x / 4, screen_size.y / 4, 0, 100, 300)
+    glOrtho(0, w, h, 0, 100, 300)
     glMatrixMode(GL_MODELVIEW)
     glPushMatrix()
     glLoadIdentity()
@@ -205,9 +210,20 @@ while running:
     draw_text(f'COLLIDING/GROUND: {collided}/{on_ground}', 2, 32, Color(255, 255, 255))
 
     glDisable(GL_TEXTURE_2D)
+
+    glLineWidth(3)
+    glBegin(GL_LINES)
+    glColor3f(1, 1, 1)
+    glVertex2f(cx - 5, cy)
+    glVertex2f(cx + 5, cy)
+    glVertex2f(cx, cy - 5)
+    glVertex2f(cx, cy + 5)
+    glEnd()
+
     glPopMatrix()
     glMatrixMode(GL_PROJECTION)
     glPopMatrix()
+    ## END DRAW HUD
 
     pygame.display.flip()
 
