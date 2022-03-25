@@ -1,17 +1,18 @@
 from collections import deque
 import random
+from typing import Optional, cast
 
 import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from pygame.locals import *
 
-from my_evil_twin.consts import (ENEMY_COUNT, FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED,
+from my_evil_twin.consts import (ENEMY_COUNT, FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED, AI_TICK_TIME,
                                  TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
 from my_evil_twin.text_render import draw_text
-from my_evil_twin.utils import get_global_color_offset, set_global_color_offset
+from my_evil_twin.utils import clamp, get_global_color_offset, set_global_color_offset, set_local_color_offset
 
 screen_size = pygame.Vector2()
 
@@ -26,7 +27,7 @@ def resize_view(width: int, height: int) -> None:
     gluPerspective(80, ratio, 0.01, 1000)
 
 
-def respawn():
+def respawn() -> None:
     global on_ground
     on_ground = False
     position.update(LEVEL.spawn)
@@ -34,7 +35,11 @@ def respawn():
     rotation.update(0, 0)
 
 
-def redraw_level():
+def random_enemy() -> tuple[pygame.Vector3, list[float]]:
+    return pygame.Vector3(random.uniform(-20, 20), random.uniform(7, 13), random.uniform(-35, 35)), [random.uniform(0, 15.0)]
+
+
+def redraw_level() -> None:
     LEVEL.reset_draw_list()
     clear_circle_display_lists()
     LEVEL.draw_compile()
@@ -48,7 +53,10 @@ except ImportError:
           'increase your framerate.')
 
 
-enemies = [pygame.Vector3(random.uniform(-20, 20), 10, random.uniform(-35, 35)) for _ in range(ENEMY_COUNT)]
+enemies: list[tuple[pygame.Vector3, list[float], pygame.Vector2, list[int]]] = [
+    (*random_enemy(), pygame.Vector2(), [0])
+    for _ in range(ENEMY_COUNT)
+]
 
 
 pygame.init()
@@ -83,6 +91,11 @@ fps_vals = deque(maxlen=240)
 
 keys_pressed: set[int] = set()
 
+freecam = False
+freecam_pos = pygame.Vector3()
+
+ai_tick_time = 0
+
 mouse_rel = pygame.Vector2()
 while running:
     mouse_rel.update(0, 0)
@@ -98,9 +111,10 @@ while running:
         elif event.type == KEYDOWN:
             keys_pressed.add(event.key)
             if event.key == K_SPACE:
-                if on_ground:
-                    velocity.y = JUMP_SPEED
-                    on_ground = False
+                if not freecam:
+                    if on_ground:
+                        velocity.y = JUMP_SPEED
+                        on_ground = False
             elif event.key == K_ESCAPE:
                 pygame.mouse.set_visible(True)
                 pygame.event.set_grab(False)
@@ -113,6 +127,10 @@ while running:
                 redraw_level()
             elif event.key == K_r:
                 respawn()
+            elif event.key == K_g:
+                freecam = not freecam
+                if freecam:
+                    freecam_pos = position.copy()
         elif event.type == KEYUP:
             keys_pressed.discard(event.key)
             if event.key == K_F11:
@@ -135,8 +153,16 @@ while running:
     if K_d in keys_pressed:
         movement.x -= MOVE_SPEED
     movement.rotate_ip(rotation.y)
-    velocity.x = movement.x
-    velocity.z = movement.y
+    if freecam:
+        freecam_pos.x += movement.x * delta
+        freecam_pos.z += movement.y * delta
+        if K_SPACE in keys_pressed:
+            freecam_pos.y += 10 * delta
+        if K_LSHIFT in keys_pressed:
+            freecam_pos.y -= 10 * delta
+    else:
+        velocity.x = movement.x
+        velocity.z = movement.y
 
     fps = 1 / raw_delta if raw_delta else 1000
     fps_vals.append(fps)
@@ -183,11 +209,51 @@ while running:
     glLoadIdentity()
     glRotatef(rotation.x, 1, 0, 0)
     glRotatef(rotation.y + 180, 0, 1, 0)
-    glTranslatef(-position.x, -position.y - 1.8, -position.z)
+    if freecam:
+        glTranslatef(-freecam_pos.x, -freecam_pos.y - 1.8, -freecam_pos.z)
+    else:
+        glTranslatef(-position.x, -position.y - 1.8, -position.z)
 
     LEVEL.draw(rotation)
-    for enemy in enemies:
-        draw_rectangle(enemy - pygame.Vector3(0.3, 1.0, 0.3), enemy + pygame.Vector3(0.3, 1.0, 0.3))
+    ai_tick_time += delta
+    while ai_tick_time > AI_TICK_TIME:
+        for (enemy_pos, color, enemy_vel, draw_list) in enemies:
+            if not enemy_vel:
+                enemy_vel.update(pygame.Vector2(1, 0).rotate(random.uniform(-180, 180)))
+            offset = (enemy_pos.xz - position.xz).as_polar()[1] - enemy_vel.as_polar()[1] + 180
+            while offset > 180:
+                offset -= 360
+            while offset < -180:
+                offset += 360
+            if offset < 0:
+                random_offset = random.uniform(offset, 30)
+            else:
+                random_offset = random.uniform(-30, offset)
+            enemy_vel.rotate_ip(random_offset)
+        ai_tick_time -= AI_TICK_TIME
+    for (enemy_pos, color, enemy_vel, draw_list) in enemies:
+        enemy_pos.update(pygame.Vector3(enemy_pos.x + enemy_vel.x * 3 * delta, enemy_pos.y - 0.25 * delta, enemy_pos.z + enemy_vel.y * 3 * delta))
+        glPushMatrix()
+        glTranslatef(enemy_pos.x, enemy_pos.y, enemy_pos.z)
+        if not draw_list[0]:
+            draw_list[0] = cast(int, glGenLists(1))
+            glNewList(draw_list[0], GL_COMPILE)
+            set_local_color_offset(color[0])
+            draw_rectangle(pygame.Vector3(-0.3, -1.0, -0.3), pygame.Vector3(0.3, 1.0, 0.3))
+            glEndList()
+        glCallList(draw_list[0])
+        glPopMatrix()
+        if enemy_pos.y <= 0:
+            new_pos, new_color = random_enemy()
+            enemy_pos.update(new_pos)
+            enemy_vel.update(0, 0)
+            color[0] = new_color[0]
+            if draw_list[0]:
+                glDeleteLists(draw_list[0], 1)
+            draw_list[0] = 0
+    if freecam:
+        set_local_color_offset(0)
+        draw_rectangle(position - pygame.Vector3(0.3, 0.0, 0.3), position + pygame.Vector3(0.3, 2.0, 0.3))
     ## END DRAW WORLD
 
     ## DRAW HUD
@@ -230,4 +296,7 @@ while running:
 
 LEVEL.close()
 clear_circle_display_lists()
+for (_, _, _, draw_list) in enemies:
+    if draw_list[0]:
+        glDeleteLists(draw_list[0], 1)
 pygame.quit()

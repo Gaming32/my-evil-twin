@@ -24,3 +24,7 @@ def get_local_color_offset() -> float:
 def set_local_color_offset(offset: float) -> None:
     global _local_color_offset
     _local_color_offset = offset
+
+
+def clamp(f: float, small: float, large: float) -> float:
+    return max(small, min(f, large))
