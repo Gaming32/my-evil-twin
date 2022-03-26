@@ -199,6 +199,7 @@ for (i, (default, correct_type)) in enumerate(stat_types):
 if len(global_stats) > len(stat_types):
     print(f'Stats data bigger than expected ({len(global_stats)}>{len(stat_types)}).'
            ' It has been truncated.')
+    del global_stats[len(stat_types):]
 
 
 pygame.init()
