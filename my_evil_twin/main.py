@@ -8,7 +8,7 @@ from OpenGL.GLU import gluPerspective
 from pygame.locals import *
 
 from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNTS, ENEMY_SIZE, ENEMY_SIZE_SQUARED, FPS,
-                                 GRAVITY, HIDDEN_ENEMY_COUNTS, JUMP_SPEED,
+                                 GRAVITY, HIDDEN_ENEMY_COUNTS, JUMP_SPEED, LIVES,
                                  MOVE_SPEED, TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
@@ -62,12 +62,28 @@ def full_reset() -> None:
     hidden_enemies = hidden_enemy_count
 
 
-def full_reset_same_level() -> None:
-    global level
+def full_reset_death() -> None:
+    global level, lives
     if remaining_enemies:
         level -= 1
+        lives -= 1
+        if lives == 0:
+            game_over()
+            return
     full_reset()
     level += 1
+
+
+def game_over() -> None:
+    global level, lives, was_game_over, remaining_enemies, hidden_enemies
+    respawn()
+    free_enemies()
+    level = 0
+    lives = LIVES
+    was_game_over = True
+    enemies.clear()
+    remaining_enemies = 0
+    hidden_enemies = 0
 
 
 def random_enemy() -> tuple[pygame.Vector3, list[float]]:
@@ -106,6 +122,8 @@ enemies: list[tuple[pygame.Vector3, list[float], pygame.Vector2, list[int]]] = [
 remaining_enemies: int = 0
 hidden_enemies: int = 0
 level = 0
+lives = LIVES
+was_game_over = False
 
 
 pygame.init()
@@ -175,7 +193,7 @@ while running:
                 set_global_color_offset(get_global_color_offset() - 1)
                 redraw_level()
             elif event.key == K_r:
-                full_reset_same_level()
+                full_reset_death()
             elif event.key == K_g:
                 freecam = not freecam
                 if freecam:
@@ -343,7 +361,7 @@ while running:
                 glDeleteLists(draw_list[0], 1)
             draw_list[0] = 0
         if enemy_pos.distance_squared_to(position) <= ENEMY_SIZE_SQUARED:
-            full_reset_same_level()
+            full_reset_death()
     if freecam:
         set_local_color_offset(0)
         draw_rectangle(position - pygame.Vector3(0.3, 0.0, 0.3), position + pygame.Vector3(0.3, 2.0, 0.3))
@@ -376,8 +394,9 @@ while running:
         level_name = f'Infinity {level - len(ENEMY_COUNTS)}'
     else:
         level_name = str(level)
-    draw_text(f'LEVEL: {level_name}', 2, 22, Color(255, 255, 255))
-    draw_text(f'REMAINING: {remaining_enemies}', 2, 32, Color(255, 255, 255))
+    draw_text(f'LIVES: {lives}', 2, 25, Color(255, 255, 255))
+    draw_text(f'LEVEL: {level_name}', 2, 35, Color(255, 255, 255))
+    draw_text(f'REMAINING: {remaining_enemies}', 2, 45, Color(255, 255, 255))
 
     if not remaining_enemies:
         if level:
@@ -389,7 +408,12 @@ while running:
             else:
                 draw_centered_text(f'Press R to Play Level {level + 1}', cx, cy + 6, Color(0, 200, 200))
         else:
-            draw_centered_text('Press R to Play!', cx, cy - 14, Color(0, 200, 200))
+            if was_game_over:
+                draw_centered_text('Game Over!', cx, cy - 14, Color(200, 0, 0))
+                r_to_play_y = cy + 6
+            else:
+                r_to_play_y = cy - 14
+            draw_centered_text('Press R to Play Again', cx, r_to_play_y, Color(0, 200, 200))
 
     glDisable(GL_TEXTURE_2D)
 
