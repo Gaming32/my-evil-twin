@@ -105,8 +105,8 @@ def game_over() -> None:
     remaining_enemies = 0
     hidden_enemies = 0
 
-    global_stats[2] += hits
-    global_stats[3] += shots
+    global_stats[1] += hits
+    global_stats[2] += shots
     levels_beaten = 0
     shots, hits = 0, 0
 
@@ -176,7 +176,7 @@ except Exception as e:
     print(f'Failed to read stats, using defaults: {e.__class__.__qualname__}: {e}')
 else:
     print('Stats read')
-for (i, (default, correct_type)) in enumerate([(0, int), (0.0, float), (0, int), (0, int)]):
+for (i, (default, correct_type)) in enumerate([(0, int), (0, int), (0, int)]):
     if i >= len(global_stats):
         global_stats.append(default)
     elif math.isnan(global_stats[i]):
@@ -478,16 +478,12 @@ while running:
         draw_right_text(f'Hit accuracy: {hit_accuracy * 100:.2f}%', w - 2, 12, Color(255, 255, 255))
         if levels_beaten > global_stats[0]:
             global_stats[0] = levels_beaten
-        if shots >= 20 and levels_beaten >= global_stats[2] and hit_accuracy > global_stats[1]:
-            global_stats[1] = hit_accuracy
-            global_stats[2] = levels_beaten
-        total_hits = global_stats[2] + hits
-        total_shots = global_stats[3] + shots
+        total_hits = global_stats[1] + hits
+        total_shots = global_stats[2] + shots
         overall_accuracy = total_hits / total_shots if total_shots else 0
         draw_right_text(f'Total shots fired: {total_shots}', w - 2, 22, Color(255, 255, 255))
         draw_right_text(f'Overall accuracy: {overall_accuracy * 100:.2f}%', w - 2, 32, Color(255, 255, 255))
         draw_right_text(f'Levels beaten (high score): {global_stats[0]}', w - 2, 42, Color(255, 255, 255))
-        # draw_right_text(f'Hit accuracy (high score): {global_stats[1] * 100:.2f}%', w - 2, 32, Color(255, 255, 255))
 
         if level:
             draw_centered_text(f'You beat level {level_name}!', cx, cy - 14, Color(0, 200, 0))
@@ -528,8 +524,8 @@ clear_circle_display_lists()
 free_enemies()
 pygame.quit()
 
-global_stats[2] += hits
-global_stats[3] += shots
+global_stats[1] += hits
+global_stats[2] += shots
 print('Writing stats')
 try:
     with open('met_stats.txt', 'w') as fp:
