@@ -1,5 +1,7 @@
 import colorsys
 
+import pygame
+
 _global_color_offset = 2
 _local_color_offset = 0
 
@@ -28,3 +30,7 @@ def set_local_color_offset(offset: float) -> None:
 
 def clamp(f: float, small: float, large: float) -> float:
     return max(small, min(f, large))
+
+
+def blink_on() -> bool:
+    return bool((pygame.time.get_ticks() // 1000 + 1) % 2)

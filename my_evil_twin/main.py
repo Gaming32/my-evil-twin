@@ -23,7 +23,7 @@ from my_evil_twin.level_data import LEVEL
 from my_evil_twin.stats import load_stats, write_stats
 from my_evil_twin.text_render import (draw_centered_text, draw_right_text,
                                       draw_text)
-from my_evil_twin.utils import (get_global_color_offset,
+from my_evil_twin.utils import (blink_on, get_global_color_offset,
                                 set_global_color_offset,
                                 set_local_color_offset)
 
@@ -174,7 +174,7 @@ position = LEVEL.spawn.copy()
 
 pygame.event.set_grab(True)
 pygame.mouse.set_visible(False)
-mouse_owned = True
+game_paused = False
 
 clock = pygame.time.Clock()
 
@@ -201,7 +201,7 @@ while running:
         if event.type == QUIT:
             running = False
         elif event.type == MOUSEMOTION:
-            if mouse_owned:
+            if not game_paused:
                 mouse_rel += event.rel
         elif event.type == KEYDOWN:
             keys_pressed.add(event.key)
@@ -211,9 +211,9 @@ while running:
                         velocity.y = JUMP_SPEED
                         on_ground = False
             elif event.key == K_ESCAPE:
-                pygame.mouse.set_visible(True)
-                pygame.event.set_grab(False)
-                mouse_owned = False
+                game_paused = not game_paused
+                pygame.mouse.set_visible(game_paused)
+                pygame.event.set_grab(not game_paused)
             elif event.key == K_EQUALS:
                 set_global_color_offset(get_global_color_offset() + 1)
                 redraw_level()
@@ -253,8 +253,9 @@ while running:
         elif event.type == MOUSEBUTTONDOWN:
             pygame.event.set_grab(True)
             pygame.mouse.set_visible(False)
-            mouse_owned = True
-            if event.button == 1:
+            was_game_paused = game_paused
+            game_paused = False
+            if not was_game_paused and event.button == 1:
                 if remaining_enemies:
                     shots += 1
                     hit = raycast()
@@ -288,63 +289,67 @@ while running:
             resize_view(event.w, event.h)
 
     movement = pygame.Vector2()
-    if K_w in keys_pressed:
-        movement.y += MOVE_SPEED
-    if K_s in keys_pressed:
-        movement.y -= MOVE_SPEED
-    if K_a in keys_pressed:
-        movement.x += MOVE_SPEED
-    if K_d in keys_pressed:
-        movement.x -= MOVE_SPEED
-    movement.rotate_ip(rotation.y)
-    if freecam:
-        freecam_pos.x += movement.x * delta
-        freecam_pos.z += movement.y * delta
-        if K_SPACE in keys_pressed:
-            freecam_pos.y += 10 * delta
-        if K_LSHIFT in keys_pressed:
-            freecam_pos.y -= 10 * delta
-    else:
-        velocity.x = movement.x
-        velocity.z = movement.y
+    if not game_paused:
+        if K_w in keys_pressed:
+            movement.y += MOVE_SPEED
+        if K_s in keys_pressed:
+            movement.y -= MOVE_SPEED
+        if K_a in keys_pressed:
+            movement.x += MOVE_SPEED
+        if K_d in keys_pressed:
+            movement.x -= MOVE_SPEED
+        movement.rotate_ip(rotation.y)
+        if freecam:
+            freecam_pos.x += movement.x * delta
+            freecam_pos.z += movement.y * delta
+            if K_SPACE in keys_pressed:
+                freecam_pos.y += 10 * delta
+            if K_LSHIFT in keys_pressed:
+                freecam_pos.y -= 10 * delta
+        else:
+            velocity.x = movement.x
+            velocity.z = movement.y
 
     fps = 1 / raw_delta if raw_delta else 1000
     fps_vals.append(fps)
     fps_smooth_value = sum(fps_vals) / len(fps_vals)
     min_fps = min(fps_vals)
 
-    rotation.x += mouse_rel.y * TURN_SPEED
-    rotation.y += mouse_rel.x * TURN_SPEED
-    if rotation.x > 90:
-        rotation.x = 90
-    elif rotation.x < -90:
-        rotation.x = -90
+    if not game_paused:
+        rotation.x += mouse_rel.y * TURN_SPEED
+        rotation.y += mouse_rel.x * TURN_SPEED
+        if rotation.x > 90:
+            rotation.x = 90
+        elif rotation.x < -90:
+            rotation.x = -90
 
-    velocity.y += GRAVITY * delta
+    if not game_paused:
+        velocity.y += GRAVITY * delta
 
     collided = False
-    for i in range(3):
-        position[i] += velocity[i] * delta
-        if position.y < -100:
-            respawn()
-        collided_this_time, new_position = LEVEL.collide(position)
-        collided = collided or collided_this_time
-        if i == 1:
-            if new_position.y != position.y:
-                if new_position.y > position.y:
-                    on_ground = True
-                position.y = new_position.y
-                velocity.y = 0
-            else:
-                on_ground = False
-        if i == 0:
-            if new_position.x != position.x:
-                position.x = new_position.x
-                velocity.x = 0
-        if i == 2:
-            if new_position.z != position.z:
-                position.z = new_position.z
-                velocity.z = 0
+    if not game_paused:
+        for i in range(3):
+            position[i] += velocity[i] * delta
+            if position.y < -100:
+                respawn()
+            collided_this_time, new_position = LEVEL.collide(position)
+            collided = collided or collided_this_time
+            if i == 1:
+                if new_position.y != position.y:
+                    if new_position.y > position.y:
+                        on_ground = True
+                    position.y = new_position.y
+                    velocity.y = 0
+                else:
+                    on_ground = False
+            if i == 0:
+                if new_position.x != position.x:
+                    position.x = new_position.x
+                    velocity.x = 0
+            if i == 2:
+                if new_position.z != position.z:
+                    position.z = new_position.z
+                    velocity.z = 0
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) # type: ignore
 
@@ -359,7 +364,8 @@ while running:
         glTranslatef(-position.x, -position.y - PLAYER_HEIGHT, -position.z)
 
     LEVEL.draw(rotation)
-    ai_tick_time += delta
+    if not game_paused:
+        ai_tick_time += delta
     while ai_tick_time > AI_TICK_TIME:
         for (enemy_pos, color, enemy_vel, draw_list) in enemies:
             if not enemy_vel:
@@ -376,7 +382,8 @@ while running:
             enemy_vel.rotate_ip(random_offset)
         ai_tick_time -= AI_TICK_TIME
     for (eix, (enemy_pos, color, enemy_vel, draw_list)) in enumerate(enemies):
-        enemy_pos.update(pygame.Vector3(enemy_pos.x + enemy_vel.x * 3 * delta, enemy_pos.y - 0.25 * delta, enemy_pos.z + enemy_vel.y * 3 * delta))
+        if not game_paused:
+            enemy_pos.update(pygame.Vector3(enemy_pos.x + enemy_vel.x * 3 * delta, enemy_pos.y - 0.25 * delta, enemy_pos.z + enemy_vel.y * 3 * delta))
         glPushMatrix()
         glTranslatef(enemy_pos.x, enemy_pos.y, enemy_pos.z)
         if not draw_list[0]:
@@ -392,7 +399,7 @@ while running:
         # look_pos = pygame.Vector3(0, 0, 1).rotate(-enemy_vel.as_polar()[1] + 90, pygame.Vector3(0, 1, 0)) * 3 + enemy_pos
         # glVertex3f(look_pos.x, look_pos.y, look_pos.z)
         # glEnd()
-        if enemy_pos.y <= 0:
+        if not game_paused and enemy_pos.y <= 0:
             new_pos, new_color = random_enemy()
             enemy_pos.update(new_pos)
             enemy_vel.update(0, 0)
@@ -400,7 +407,7 @@ while running:
             if draw_list[0]:
                 glDeleteLists(draw_list[0], 1)
             draw_list[0] = 0
-        if enemy_pos.distance_squared_to(position + pygame.Vector3(0, PLAYER_HEIGHT, 0)) <= ENEMY_SIZE_SQUARED:
+        if not game_paused and enemy_pos.distance_squared_to(position + pygame.Vector3(0, PLAYER_HEIGHT, 0)) <= ENEMY_SIZE_SQUARED:
             full_reset_death()
     if freecam:
         set_local_color_offset(0)
@@ -426,10 +433,7 @@ while running:
     # draw_text(f'VX/VY/VZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
     # draw_text(f'COLLIDING/GROUND: {collided}/{on_ground}', 2, 32, Color(255, 255, 255))
     if level == 0:
-        if pygame.time.get_ticks() // 1000 % 2:
-            level_name = ''
-        else:
-            level_name = 'Press R'
+        level_name = 'Press R' * blink_on()
     elif level > len(ENEMY_COUNTS):
         level_name = f'Infinity {level - len(ENEMY_COUNTS)}'
     else:
@@ -464,16 +468,23 @@ while running:
             else:
                 draw_centered_text('Press R to Play', cx, cy - 14, Color(0, 200, 200))
 
+    if game_paused:
+        draw_centered_text(
+            'Game Paused' * blink_on(),
+            cx, cy - 4, Color(255, 255, 255)
+        )
+
     glDisable(GL_TEXTURE_2D)
 
-    glLineWidth(3)
-    glBegin(GL_LINES)
-    glColor3f(1, 1, 1)
-    glVertex2f(cx - 5, cy)
-    glVertex2f(cx + 5, cy)
-    glVertex2f(cx, cy - 5)
-    glVertex2f(cx, cy + 5)
-    glEnd()
+    if not game_paused:
+        glLineWidth(3)
+        glBegin(GL_LINES)
+        glColor3f(1, 1, 1)
+        glVertex2f(cx - 5, cy)
+        glVertex2f(cx + 5, cy)
+        glVertex2f(cx, cy - 5)
+        glVertex2f(cx, cy + 5)
+        glEnd()
 
     glPopMatrix()
     glMatrixMode(GL_PROJECTION)
