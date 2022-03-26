@@ -111,7 +111,7 @@ def get_string_width(s: str) -> int:
             continue
         char_index = ALLOWED_CHARS.find(c)
         if char_index >= 0:
-            width += CHAR_WIDTH[char_index]
+            width += CHAR_WIDTH[char_index + 32]
             ix += 1
             continue
         ix += 1
@@ -120,6 +120,10 @@ def get_string_width(s: str) -> int:
 
 def draw_centered_text(s: str, x: float, y: float, color: Color) -> None:
     draw_text(s, x - get_string_width(s) / 2, y, color)
+
+
+def draw_right_text(s: str, x: float, y: float, color: Color) -> None:
+    draw_text(s, x - get_string_width(s), y, color)
 
 
 def _load_font() -> None:

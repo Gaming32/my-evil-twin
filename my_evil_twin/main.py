@@ -1,6 +1,7 @@
 import random
 from collections import deque
-from typing import Optional, cast
+from typing import Optional, Union, cast
+import numpy as np
 
 import pygame
 from OpenGL.GL import *
@@ -12,7 +13,7 @@ from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNTS, ENEMY_RENDER_CAP,
                                  LIVES, MOVE_SPEED, TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
-from my_evil_twin.text_render import draw_centered_text, draw_text
+from my_evil_twin.text_render import draw_centered_text, draw_right_text, draw_text
 from my_evil_twin.utils import (get_global_color_offset,
                                 set_global_color_offset,
                                 set_local_color_offset)
@@ -140,6 +141,30 @@ was_game_over = False
 
 levels_beaten = 0
 shots, hits = 0, 0
+global_stats: list[Union[int, float]]
+
+print('Reading stats')
+try:
+    global_stats = []
+    with open('met_stats.txt') as fp:
+        for line in fp:
+            line = line.strip()
+            if not line:
+                continue
+            stat_type = line[0]
+            if stat_type == 'i':
+                content = line[1:]
+                global_stats.append(int(content, 36) >> 3)
+            elif stat_type == 'f':
+                content = line[1:]
+                global_stats.append(float.fromhex(content))
+            else:
+                print('Unknown stat type, skipping:', stat_type)
+except Exception as e:
+    print(f'Failed to read stats, using defaults: {e.__class__.__qualname__}: {e}')
+    global_stats = [0, 0.0]
+else:
+    print('Stats read')
 
 
 pygame.init()
@@ -242,26 +267,27 @@ while running:
             pygame.mouse.set_visible(False)
             mouse_owned = True
             if event.button == 1:
-                shots += 1
-                hit = raycast()
-                if hit is not None:
-                    hits += 1
-                    print(hit, end=' ')
-                    enemy_pos, color, enemy_vel, draw_list = enemies[hit]
-                    if draw_list[0]:
-                        glDeleteLists(draw_list[0], 1)
-                    remaining_enemies -= 1
-                    if hidden_enemies:
-                        new_pos, new_color = random_enemy()
-                        enemy_pos.update(new_pos)
-                        enemy_vel.update(0, 0)
-                        color[0] = new_color[0]
-                        hidden_enemies -= 1
-                        print('replaced')
-                    else:
-                        del enemies[hit]
-                        print('gone')
-                    draw_list[0] = 0
+                if remaining_enemies:
+                    shots += 1
+                    hit = raycast()
+                    if hit is not None:
+                        hits += 1
+                        print(hit, end=' ')
+                        enemy_pos, color, enemy_vel, draw_list = enemies[hit]
+                        if draw_list[0]:
+                            glDeleteLists(draw_list[0], 1)
+                        remaining_enemies -= 1
+                        if hidden_enemies:
+                            new_pos, new_color = random_enemy()
+                            enemy_pos.update(new_pos)
+                            enemy_vel.update(0, 0)
+                            color[0] = new_color[0]
+                            hidden_enemies -= 1
+                            print('replaced')
+                        else:
+                            del enemies[hit]
+                            print('gone')
+                        draw_list[0] = 0
         elif event.type == VIDEORESIZE:
             resize_view(event.w, event.h)
 
@@ -417,9 +443,16 @@ while running:
     draw_text(f'REMAINING: {remaining_enemies}', 2, 46, Color(255, 255, 255))
 
     if not remaining_enemies:
-        draw_text(f'Levels beaten: {levels_beaten}', 2, 60, Color(255, 255, 255))
         hit_accuracy = hits / shots if shots else 0
-        draw_text(f'Hit accuracy: {hit_accuracy * 100:.2f}%', 2, 70, Color(255, 255, 255))
+        draw_right_text(f'Levels beaten: {levels_beaten}', w - 2, 2, Color(255, 255, 255))
+        draw_right_text(f'Hit accuracy: {hit_accuracy * 100:.2f}%', w - 2, 12, Color(255, 255, 255))
+        if levels_beaten > global_stats[0]:
+            global_stats[0] = levels_beaten
+        if hit_accuracy > global_stats[1]:
+            global_stats[1] = hit_accuracy
+        draw_right_text(f'Levels beaten (high score): {global_stats[0]}', w - 2, 22, Color(255, 255, 255))
+        draw_right_text(f'Hit accuracy (high score): {global_stats[1] * 100:.2f}%', w - 2, 32, Color(255, 255, 255))
+
         if level:
             draw_centered_text(f'You beat level {level_name}!', cx, cy - 14, Color(0, 200, 0))
             if level == len(ENEMY_COUNTS):
@@ -458,3 +491,21 @@ LEVEL.close()
 clear_circle_display_lists()
 free_enemies()
 pygame.quit()
+
+print('Writing stats')
+try:
+    with open('met_stats.txt', 'w') as fp:
+        for stat in global_stats:
+            if isinstance(stat, int):
+                encoded = (stat << 3) + random.randrange(1 << 3)
+                line = f'i{np.base_repr(encoded, 36)}'
+            elif isinstance(stat, float):
+                line = f'f{stat.hex()}'
+            else:
+                print('Unknown stat type, skpping:', type(stat))
+                continue
+            fp.write(f'{line}\n')
+except Exception as e:
+    print(f'Failed to write stats: {e.__class__.__qualname__}: {e}')
+else:
+    print('Stats written')
