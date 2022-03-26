@@ -1,3 +1,4 @@
+import math
 import random
 from collections import deque
 from typing import Optional, Union, cast
@@ -167,13 +168,32 @@ try:
             elif stat_type == 'f':
                 content = line[1:]
                 global_stats.append(float.fromhex(content))
+            elif stat_type == '!':
+                global_stats.append(math.nan)
             else:
                 print('Unknown stat type, skipping:', stat_type)
 except Exception as e:
     print(f'Failed to read stats, using defaults: {e.__class__.__qualname__}: {e}')
 else:
     print('Stats read')
-global_stats.extend([0, 0.0, 0, 0][len(global_stats):])
+for (i, (default, correct_type)) in enumerate([(0, int), (0.0, float), (0, int), (0, int)]):
+    if i >= len(global_stats):
+        global_stats.append(default)
+    elif math.isnan(global_stats[i]):
+        print('Stat reset requested at index', i)
+        global_stats[i] = default
+    elif not isinstance(global_stats[i], correct_type):
+        print(
+            'Found incorrect stat type ',
+            global_stats[i].__class__.__qualname__,
+            ' expected ',
+            correct_type.__qualname__,
+            ' at index ',
+            i,
+            '. using default value.',
+            sep=''
+        )
+        global_stats[i] = default
 
 
 pygame.init()
