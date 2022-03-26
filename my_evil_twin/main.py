@@ -176,7 +176,9 @@ except Exception as e:
     print(f'Failed to read stats, using defaults: {e.__class__.__qualname__}: {e}')
 else:
     print('Stats read')
-for (i, (default, correct_type)) in enumerate([(0, int), (0, int), (0, int)]):
+
+stat_types = [(0, int), (0, int), (0, int)]
+for (i, (default, correct_type)) in enumerate(stat_types):
     if i >= len(global_stats):
         global_stats.append(default)
     elif math.isnan(global_stats[i]):
@@ -194,6 +196,9 @@ for (i, (default, correct_type)) in enumerate([(0, int), (0, int), (0, int)]):
             sep=''
         )
         global_stats[i] = default
+if len(global_stats) > len(stat_types):
+    print(f'Stats data bigger than expected ({len(global_stats)}>{len(stat_types)}).'
+           ' It has been truncated.')
 
 
 pygame.init()
