@@ -1,8 +1,8 @@
 import random
 from collections import deque
 from typing import Optional, Union, cast
-import numpy as np
 
+import numpy as np
 import pygame
 from OpenGL.GL import *
 from OpenGL.GLU import gluPerspective
@@ -10,10 +10,12 @@ from pygame.locals import *
 
 from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNTS, ENEMY_RENDER_CAP,
                                  ENEMY_SIZE_SQUARED, FPS, GRAVITY, JUMP_SPEED,
-                                 LIVES, MOVE_SPEED, TURN_SPEED, VSYNC)
+                                 LIVES, MOVE_SPEED, PLAYER_HEIGHT, TURN_SPEED,
+                                 VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
-from my_evil_twin.text_render import draw_centered_text, draw_right_text, draw_text
+from my_evil_twin.text_render import (draw_centered_text, draw_right_text,
+                                      draw_text)
 from my_evil_twin.utils import (get_global_color_offset,
                                 set_global_color_offset,
                                 set_local_color_offset)
@@ -115,7 +117,7 @@ def raycast() -> Optional[int]:
         .rotate(rotation.x, pygame.Vector3(1, 0, 0))
         .rotate(-rotation.y, pygame.Vector3(0, 1, 0))
     )
-    ray = position + pygame.Vector3(0, 1.8, 0)
+    ray = position + pygame.Vector3(0, PLAYER_HEIGHT, 0)
     for _ in range(50):
         # draw_circle(ray, rotation, 0.25, 5)
         for (eix, (enemy, _, _, _)) in enumerate(enemies):
@@ -358,9 +360,9 @@ while running:
     glRotatef(rotation.x, 1, 0, 0)
     glRotatef(rotation.y + 180, 0, 1, 0)
     if freecam:
-        glTranslatef(-freecam_pos.x, -freecam_pos.y - 1.8, -freecam_pos.z)
+        glTranslatef(-freecam_pos.x, -freecam_pos.y - PLAYER_HEIGHT, -freecam_pos.z)
     else:
-        glTranslatef(-position.x, -position.y - 1.8, -position.z)
+        glTranslatef(-position.x, -position.y - PLAYER_HEIGHT, -position.z)
 
     LEVEL.draw(rotation)
     ai_tick_time += delta
@@ -404,7 +406,7 @@ while running:
             if draw_list[0]:
                 glDeleteLists(draw_list[0], 1)
             draw_list[0] = 0
-        if enemy_pos.distance_squared_to(position) <= ENEMY_SIZE_SQUARED:
+        if enemy_pos.distance_squared_to(position + pygame.Vector3(0, PLAYER_HEIGHT, 0)) <= ENEMY_SIZE_SQUARED:
             full_reset_death()
     if freecam:
         set_local_color_offset(0)
