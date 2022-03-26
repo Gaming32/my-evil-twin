@@ -49,11 +49,14 @@ def full_reset() -> None:
     free_enemies()
     respawn()
     if level < len(ENEMY_COUNTS):
-        remaining_enemies = ENEMY_COUNTS[level]
+        try:
+            remaining_enemies = ENEMY_COUNTS[level]
+        except IndexError:
+            pygame.display.set_caption('You definitely reached the killscreen')
     else:
         # Keep them guessing (unless they look here of course :P)
-        remaining_enemies = int(
-            ENEMY_COUNTS[-1] + 2 ** ((level - len(ENEMY_COUNTS) + 3) * 1.1) - 1
+        remaining_enemies = (
+            ENEMY_COUNTS[-1] + int((level - len(ENEMY_COUNTS) + 2) * 5)
         )
     hidden_enemies = max(0, remaining_enemies - ENEMY_RENDER_CAP)
     shown_enemies = remaining_enemies - hidden_enemies
@@ -67,12 +70,16 @@ def full_reset_death() -> None:
     global level, lives
     if remaining_enemies:
         level -= 1
+        if level < -128:
+            level = 127
         lives -= 1
         if lives == 0:
             game_over()
             return
     full_reset()
     level += 1
+    if level > 127:
+        level = -128
 
 
 def game_over() -> None:
