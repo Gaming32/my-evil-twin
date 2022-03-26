@@ -1,7 +1,6 @@
-import math
 import random
 from collections import deque
-from typing import Optional, Union, cast
+from typing import Optional, cast
 
 from my_evil_twin.consts import DEVELOPMENT
 
@@ -21,6 +20,7 @@ from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNTS, ENEMY_RENDER_CAP,
                                  VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
+from my_evil_twin.stats import load_stats, write_stats
 from my_evil_twin.text_render import (draw_centered_text, draw_right_text,
                                       draw_text)
 from my_evil_twin.utils import (get_global_color_offset,
@@ -77,7 +77,7 @@ def full_reset() -> None:
 
 
 def full_reset_death() -> None:
-    global level, lives, levels_beaten
+    global level, lives
     if remaining_enemies:
         level -= 1
         if level < -128:
@@ -86,8 +86,6 @@ def full_reset_death() -> None:
         if lives == 0:
             game_over()
             return
-    else:
-        levels_beaten += 1
     full_reset()
     level += 1
     if level > 127:
@@ -109,6 +107,7 @@ def game_over() -> None:
     global_stats[2] += shots
     levels_beaten = 0
     shots, hits = 0, 0
+    write_stats(global_stats)
 
 
 def random_enemy() -> tuple[pygame.Vector3, list[float]]:
@@ -152,54 +151,7 @@ was_game_over = False
 
 levels_beaten = 0
 shots, hits = 0, 0
-global_stats: list[Union[int, float]] = []
-
-print('Reading stats')
-try:
-    with open('met_stats.txt') as fp:
-        for line in fp:
-            line = line.strip()
-            if not line:
-                continue
-            stat_type = line[0]
-            if stat_type == 'i':
-                content = line[1:]
-                global_stats.append(int(content, 36) >> 3)
-            elif stat_type == 'f':
-                content = line[1:]
-                global_stats.append(float.fromhex(content))
-            elif stat_type == '!':
-                global_stats.append(math.nan)
-            else:
-                print('Unknown stat type, skipping:', stat_type)
-except Exception as e:
-    print(f'Failed to read stats, using defaults: {e.__class__.__qualname__}: {e}')
-else:
-    print('Stats read')
-
-stat_types = [(0, int), (0, int), (0, int)]
-for (i, (default, correct_type)) in enumerate(stat_types):
-    if i >= len(global_stats):
-        global_stats.append(default)
-    elif math.isnan(global_stats[i]):
-        print('Stat reset requested at index', i)
-        global_stats[i] = default
-    elif not isinstance(global_stats[i], correct_type):
-        print(
-            'Found incorrect stat type ',
-            global_stats[i].__class__.__qualname__,
-            ' expected ',
-            correct_type.__qualname__,
-            ' at index ',
-            i,
-            '. using default value.',
-            sep=''
-        )
-        global_stats[i] = default
-if len(global_stats) > len(stat_types):
-    print(f'Stats data bigger than expected ({len(global_stats)}>{len(stat_types)}).'
-           ' It has been truncated.')
-    del global_stats[len(stat_types):]
+global_stats = load_stats()
 
 
 pygame.init()
@@ -324,6 +276,14 @@ while running:
                             del enemies[hit]
                             print('gone')
                         draw_list[0] = 0
+                        if not remaining_enemies:
+                            # We beat this level
+                            levels_beaten += 1
+                            if levels_beaten > global_stats[0]:
+                                global_stats[0] = levels_beaten
+                            global_stats[1] += hits
+                            global_stats[2] += shots
+                            write_stats(global_stats)
         elif event.type == VIDEORESIZE:
             resize_view(event.w, event.h)
 
@@ -482,8 +442,6 @@ while running:
         hit_accuracy = hits / shots if shots else 0
         draw_right_text(f'Levels beaten: {levels_beaten}', w - 2, 2, Color(255, 255, 255))
         draw_right_text(f'Hit accuracy: {hit_accuracy * 100:.2f}%', w - 2, 12, Color(255, 255, 255))
-        if levels_beaten > global_stats[0]:
-            global_stats[0] = levels_beaten
         total_hits = global_stats[1] + hits
         total_shots = global_stats[2] + shots
         overall_accuracy = total_hits / total_shots if total_shots else 0
@@ -532,20 +490,4 @@ pygame.quit()
 
 global_stats[1] += hits
 global_stats[2] += shots
-print('Writing stats')
-try:
-    with open('met_stats.txt', 'w') as fp:
-        for stat in global_stats:
-            if isinstance(stat, int):
-                encoded = (stat << 3) + random.randrange(1 << 3)
-                line = f'i{np.base_repr(encoded, 36)}'
-            elif isinstance(stat, float):
-                line = f'f{stat.hex()}'
-            else:
-                print('Unknown stat type, skpping:', type(stat))
-                continue
-            fp.write(f'{line}\n')
-except Exception as e:
-    print(f'Failed to write stats: {e.__class__.__qualname__}: {e}')
-else:
-    print('Stats written')
+write_stats(global_stats)
