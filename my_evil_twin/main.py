@@ -171,7 +171,7 @@ except Exception as e:
     print(f'Failed to read stats, using defaults: {e.__class__.__qualname__}: {e}')
 else:
     print('Stats read')
-global_stats.extend([0, 0.0][len(global_stats):])
+global_stats.extend([0, 0.0, 0][len(global_stats):])
 
 
 pygame.init()
@@ -456,8 +456,9 @@ while running:
         draw_right_text(f'Hit accuracy: {hit_accuracy * 100:.2f}%', w - 2, 12, Color(255, 255, 255))
         if levels_beaten > global_stats[0]:
             global_stats[0] = levels_beaten
-        if shots > 20 and hit_accuracy > global_stats[1]:
+        if levels_beaten >= global_stats[2] and hit_accuracy > global_stats[1]:
             global_stats[1] = hit_accuracy
+            global_stats[2] = levels_beaten
         draw_right_text(f'Levels beaten (high score): {global_stats[0]}', w - 2, 22, Color(255, 255, 255))
         draw_right_text(f'Hit accuracy (high score): {global_stats[1] * 100:.2f}%', w - 2, 32, Color(255, 255, 255))
 
