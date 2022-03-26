@@ -10,6 +10,8 @@ from pygame.color import Color
 
 import my_evil_twin
 
+FORMAT_CODE = '\u00a7'
+
 CHAR_WIDTH: list[int] = []
 
 with resources.open_binary(my_evil_twin, 'default_font.png') as _fp:
@@ -81,21 +83,13 @@ _x = 0
 _y = 0
 
 
-def draw_text_shadow(s: str, x: int, y: int, color: Color) -> None:
-    """WARNING: doesn't work properly"""
-    draw_text(s, x + 1, y + 1, color, True)
-    draw_text(s, x, y, color, False)
-
-
-def draw_text(s: str, x: int, y: int, color: Color, is_shadow: bool = False) -> None:
+def draw_text(s: str, x: float, y: float, color: Color) -> None:
     global _x, _y
     if _font_tex == 0:
         _load_font()
     color_i = (color.a << 24) | (color.r << 16) | (color.g << 8) | color.b
     if not (color_i & 0xfc000000):
         color.r |= 0xff000000
-    if is_shadow:
-        color_i = (color_i & 0xfcfcfc) >> 2 | color_i & 0xff000000
     glColor4f(
         (color_i >> 16 & 0xff) / 255,
         (color_i >> 8 & 0xff) / 255,
@@ -104,7 +98,28 @@ def draw_text(s: str, x: int, y: int, color: Color, is_shadow: bool = False) -> 
     )
     _x = x
     _y = y
-    _draw_text(s, is_shadow)
+    _draw_text(s)
+
+
+def get_string_width(s: str) -> int:
+    width = 0
+    ix = 0
+    while ix < len(s):
+        c = s[ix]
+        if c == FORMAT_CODE:
+            ix += 2
+            continue
+        char_index = ALLOWED_CHARS.find(c)
+        if char_index >= 0:
+            width += CHAR_WIDTH[char_index]
+            ix += 1
+            continue
+        ix += 1
+    return width
+
+
+def draw_centered_text(s: str, x: float, y: float, color: Color) -> None:
+    draw_text(s, x - get_string_width(s) / 2, y, color)
 
 
 def _load_font() -> None:
@@ -122,13 +137,13 @@ def _load_font() -> None:
         GL_RGBA, GL_UNSIGNED_BYTE, font.tobytes())
 
 
-def _draw_text(s: str, is_shadow: bool) -> None:
+def _draw_text(s: str) -> None:
     global _x
     obfuscated = False
     i = 0
     while i < len(s):
         c = s[i]
-        if c == '\u00a7' and i + 1 < len(s): # Minecraft format code
+        if c == FORMAT_CODE and i + 1 < len(s):
             command_s = s[i + 1].lower()
             if command_s == 'k':
                 obfuscated = True
@@ -137,8 +152,6 @@ def _draw_text(s: str, is_shadow: bool) -> None:
                 obfuscated = False
                 if command_i == -1:
                     command_i = 15
-                if is_shadow:
-                    command_i += 16
                 new_color = COLOR_CODES[command_i]
                 glColor3f(
                     (new_color >> 16 & 0xff) / 255,
@@ -160,8 +173,6 @@ def _draw_text(s: str, is_shadow: bool) -> None:
             continue
         if char_index > 0:
             _render_normal_char(char_index + 32)
-        # else:
-        #     func_44033_a(c)
         i += 1
 
 

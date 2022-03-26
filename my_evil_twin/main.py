@@ -7,11 +7,11 @@ from OpenGL.GL import *
 from OpenGL.GLU import gluPerspective
 from pygame.locals import *
 
-from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNT, FPS, GRAVITY,
+from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNT, FPS, GRAVITY, HIDDEN_ENEMY_COUNT,
                                  JUMP_SPEED, MOVE_SPEED, TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
-from my_evil_twin.text_render import draw_text
+from my_evil_twin.text_render import draw_centered_text, draw_text
 from my_evil_twin.utils import (get_global_color_offset,
                                 set_global_color_offset,
                                 set_local_color_offset)
@@ -56,7 +56,7 @@ def raycast() -> Optional[int]:
     for _ in range(50):
         # draw_circle(ray, rotation, 0.25, 5)
         for (eix, (enemy, _, _, _)) in enumerate(enemies):
-            if enemy.distance_squared_to(ray) <= 4:
+            if enemy.distance_squared_to(ray) <= 2.25:
                 return eix
         ray += direction_vector
 
@@ -73,6 +73,8 @@ enemies: list[tuple[pygame.Vector3, list[float], pygame.Vector2, list[int]]] = [
     (*random_enemy(), pygame.Vector2(), [0])
     for _ in range(ENEMY_COUNT)
 ]
+remaining_enemies = ENEMY_COUNT + HIDDEN_ENEMY_COUNT
+hidden_enemies = HIDDEN_ENEMY_COUNT
 
 
 pygame.init()
@@ -177,14 +179,21 @@ while running:
             if event.button == 1:
                 hit = raycast()
                 if hit is not None:
-                    print(hit)
+                    print(hit, end=' ')
                     enemy_pos, color, enemy_vel, draw_list = enemies[hit]
-                    new_pos, new_color = random_enemy()
-                    enemy_pos.update(new_pos)
-                    enemy_vel.update(0, 0)
-                    color[0] = new_color[0]
                     if draw_list[0]:
                         glDeleteLists(draw_list[0], 1)
+                    remaining_enemies -= 1
+                    if hidden_enemies:
+                        new_pos, new_color = random_enemy()
+                        enemy_pos.update(new_pos)
+                        enemy_vel.update(0, 0)
+                        color[0] = new_color[0]
+                        hidden_enemies -= 1
+                        print('replaced')
+                    else:
+                        del enemies[hit]
+                        print('gone')
                     draw_list[0] = 0
         elif event.type == VIDEORESIZE:
             resize_view(event.w, event.h)
@@ -285,10 +294,15 @@ while running:
             draw_list[0] = cast(int, glGenLists(1))
             glNewList(draw_list[0], GL_COMPILE)
             set_local_color_offset(color[0])
-            draw_rectangle(pygame.Vector3(-0.3, -1.0, -0.3), pygame.Vector3(0.3, 1.0, 0.3))
+            draw_rectangle(pygame.Vector3(-0.3, -0.4, -0.3), pygame.Vector3(0.3, 0.4, 0.3))
             glEndList()
         glCallList(draw_list[0])
         glPopMatrix()
+        glBegin(GL_LINES)
+        glVertex3f(enemy_pos.x, enemy_pos.y, enemy_pos.z)
+        look_pos = pygame.Vector3(0, 0, 1).rotate(-enemy_vel.as_polar()[1] + 90, pygame.Vector3(0, 1, 0)) * 3 + enemy_pos
+        glVertex3f(look_pos.x, look_pos.y, look_pos.z)
+        glEnd()
         if enemy_pos.y <= 0:
             new_pos, new_color = random_enemy()
             enemy_pos.update(new_pos)
@@ -320,6 +334,10 @@ while running:
     draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
     draw_text(f'VX/VY/VZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
     draw_text(f'COLLIDING/GROUND: {collided}/{on_ground}', 2, 32, Color(255, 255, 255))
+    draw_text(f'REMAINING: {remaining_enemies}', 2, 42, Color(255, 255, 255))
+
+    if not remaining_enemies:
+        draw_centered_text('YOU WIN!', cx, cy, Color(0, 255, 0))
 
     glDisable(GL_TEXTURE_2D)
 
