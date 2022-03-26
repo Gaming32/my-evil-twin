@@ -110,8 +110,16 @@ def game_over() -> None:
     write_stats(global_stats)
 
 
+_last_enemy_color: Optional[float] = None
 def random_enemy() -> tuple[pygame.Vector3, list[float]]:
-    return pygame.Vector3(random.uniform(-20, 20), random.uniform(7, 13), random.uniform(-35, 35)), [random.uniform(0, 15.0)]
+    global _last_enemy_color
+    if _last_enemy_color is not None:
+        color = _last_enemy_color
+        _last_enemy_color = None
+    else:
+        color = random.uniform(0, 15.0)
+        _last_enemy_color = color
+    return pygame.Vector3(random.uniform(-20, 20), random.uniform(7, 13), random.uniform(-35, 35)), [color]
 
 
 def redraw_level() -> None:
