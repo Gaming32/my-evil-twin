@@ -2,7 +2,10 @@ import random
 from collections import deque
 from typing import Optional, cast
 
-from my_evil_twin.consts import DEVELOPMENT
+from my_evil_twin.consts import (AI_TICK_TIME, DEVELOPMENT, ENEMY_COUNTS,
+                                 ENEMY_RENDER_CAP, ENEMY_SIZE_SQUARED, FPS,
+                                 GRAVITY, JUMP_SPEED, LIVES, MOVE_SPEED,
+                                 PLAYER_HEIGHT, TITLE, TURN_SPEED, VSYNC)
 
 if not DEVELOPMENT:
     import OpenGL
@@ -14,10 +17,6 @@ from OpenGL.GL import *
 from OpenGL.GLU import gluPerspective
 from pygame.locals import *
 
-from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNTS, ENEMY_RENDER_CAP,
-                                 ENEMY_SIZE_SQUARED, FPS, GRAVITY, JUMP_SPEED,
-                                 LIVES, MOVE_SPEED, PLAYER_HEIGHT, TURN_SPEED,
-                                 VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
 from my_evil_twin.stats import load_stats, write_stats
@@ -165,7 +164,7 @@ global_stats = load_stats()
 pygame.init()
 
 window = pygame.display.set_mode((1280, 720), OPENGL | DOUBLEBUF | RESIZABLE, vsync=VSYNC)
-pygame.display.set_caption('My Evil Twin')
+pygame.display.set_caption(TITLE)
 
 resize_view(window.get_width(), window.get_height())
 

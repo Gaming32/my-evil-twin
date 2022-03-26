@@ -1,3 +1,4 @@
+TITLE = 'Attack of the Killer Twins'
 TURN_SPEED = 0.15
 MOVE_SPEED = 6.0
 GRAVITY = -50.0
