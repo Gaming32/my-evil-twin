@@ -38,8 +38,15 @@ def respawn() -> None:
     rotation.update(0, 0)
 
 
+def free_enemies() -> None:
+    for (_, _, _, draw_list) in enemies:
+        if draw_list[0]:
+            glDeleteLists(draw_list[0], 1)
+
+
 def full_reset() -> None:
     global remaining_enemies, hidden_enemies, played_once
+    free_enemies()
     respawn()
     enemies[:] = [
         (*random_enemy(), pygame.Vector2(), [0])
@@ -377,7 +384,5 @@ while running:
 
 LEVEL.close()
 clear_circle_display_lists()
-for (_, _, _, draw_list) in enemies:
-    if draw_list[0]:
-        glDeleteLists(draw_list[0], 1)
+free_enemies()
 pygame.quit()
