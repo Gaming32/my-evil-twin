@@ -7,8 +7,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import gluPerspective
 from pygame.locals import *
 
-from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNT, ENEMY_SIZE, ENEMY_SIZE_SQUARED, FPS,
-                                 GRAVITY, HIDDEN_ENEMY_COUNT, JUMP_SPEED,
+from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNTS, ENEMY_SIZE, ENEMY_SIZE_SQUARED, FPS,
+                                 GRAVITY, HIDDEN_ENEMY_COUNTS, JUMP_SPEED,
                                  MOVE_SPEED, TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
@@ -45,16 +45,29 @@ def free_enemies() -> None:
 
 
 def full_reset() -> None:
-    global remaining_enemies, hidden_enemies, played_once
+    global remaining_enemies, hidden_enemies
     free_enemies()
     respawn()
+    if level < len(ENEMY_COUNTS):
+        enemy_count = ENEMY_COUNTS[level]
+        hidden_enemy_count = HIDDEN_ENEMY_COUNTS[level]
+    else:
+        enemy_count = ENEMY_COUNTS[-1] + 3 * level
+        hidden_enemy_count = HIDDEN_ENEMY_COUNTS[-1] + 3 * level
     enemies[:] = [
         (*random_enemy(), pygame.Vector2(), [0])
-        for _ in range(ENEMY_COUNT)
+        for _ in range(enemy_count)
     ]
-    remaining_enemies = ENEMY_COUNT + HIDDEN_ENEMY_COUNT
-    hidden_enemies = HIDDEN_ENEMY_COUNT
-    played_once = True
+    remaining_enemies = enemy_count + hidden_enemy_count
+    hidden_enemies = hidden_enemy_count
+
+
+def full_reset_same_level() -> None:
+    global level
+    if remaining_enemies:
+        level -= 1
+    full_reset()
+    level += 1
 
 
 def random_enemy() -> tuple[pygame.Vector3, list[float]]:
@@ -92,7 +105,7 @@ except ImportError:
 enemies: list[tuple[pygame.Vector3, list[float], pygame.Vector2, list[int]]] = []
 remaining_enemies: int = 0
 hidden_enemies: int = 0
-played_once = False
+level = 0
 
 
 pygame.init()
@@ -162,7 +175,7 @@ while running:
                 set_global_color_offset(get_global_color_offset() - 1)
                 redraw_level()
             elif event.key == K_r:
-                full_reset()
+                full_reset_same_level()
             elif event.key == K_g:
                 freecam = not freecam
                 if freecam:
@@ -330,7 +343,7 @@ while running:
                 glDeleteLists(draw_list[0], 1)
             draw_list[0] = 0
         if enemy_pos.distance_squared_to(position) <= ENEMY_SIZE_SQUARED:
-            full_reset()
+            full_reset_same_level()
     if freecam:
         set_local_color_offset(0)
         draw_rectangle(position - pygame.Vector3(0.3, 0.0, 0.3), position + pygame.Vector3(0.3, 2.0, 0.3))
@@ -352,16 +365,31 @@ while running:
 
     draw_text(f'FPS/MIN: {fps_smooth_value:.1f}/{min_fps:.1f}', 2, 2, Color(255, 255, 255))
     draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
-    draw_text(f'VX/VY/VZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
-    draw_text(f'COLLIDING/GROUND: {collided}/{on_ground}', 2, 32, Color(255, 255, 255))
-    draw_text(f'REMAINING: {remaining_enemies}', 2, 42, Color(255, 255, 255))
+    # draw_text(f'VX/VY/VZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
+    # draw_text(f'COLLIDING/GROUND: {collided}/{on_ground}', 2, 32, Color(255, 255, 255))
+    if level == 0:
+        if pygame.time.get_ticks() // 1000 % 2:
+            level_name = ''
+        else:
+            level_name = 'Press R'
+    elif level > len(ENEMY_COUNTS):
+        level_name = f'Infinity {level - len(ENEMY_COUNTS)}'
+    else:
+        level_name = str(level)
+    draw_text(f'LEVEL: {level_name}', 2, 22, Color(255, 255, 255))
+    draw_text(f'REMAINING: {remaining_enemies}', 2, 32, Color(255, 255, 255))
 
     if not remaining_enemies:
-        if played_once:
-            draw_centered_text('YOU WIN!', cx, cy - 14, Color(0, 200, 0))
-            draw_centered_text('Press R to Play Again', cx, cy + 6, Color(0, 200, 200))
+        if level:
+            draw_centered_text(f'You beat level {level_name}!', cx, cy - 14, Color(0, 200, 0))
+            if level == len(ENEMY_COUNTS):
+                draw_centered_text(f'Press R to Enter Infinite Mode', cx, cy + 6, Color(0, 200, 200))
+            elif level > len(ENEMY_COUNTS):
+                draw_centered_text(f'Press R to Play Level Infinity {level - len(ENEMY_COUNTS) + 1}', cx, cy + 6, Color(0, 200, 200))
+            else:
+                draw_centered_text(f'Press R to Play Level {level + 1}', cx, cy + 6, Color(0, 200, 200))
         else:
-            draw_centered_text('Press R to Play', cx, cy - 14, Color(0, 200, 200))
+            draw_centered_text('Press R to Play!', cx, cy - 14, Color(0, 200, 200))
 
     glDisable(GL_TEXTURE_2D)
 
