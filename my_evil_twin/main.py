@@ -175,9 +175,9 @@ glEnable(GL_BLEND)
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 glEnable(GL_DEPTH_TEST)
 
-rotation = pygame.Vector2()
+rotation = pygame.Vector2(-9, 45.9)
 velocity = pygame.Vector3()
-position = LEVEL.spawn.copy()
+position = pygame.Vector3(19.9, 0, -27.7958)
 
 pygame.event.set_grab(True)
 pygame.mouse.set_visible(False)
