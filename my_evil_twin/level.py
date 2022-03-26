@@ -10,7 +10,6 @@ from my_evil_twin.utils import set_local_color_offset, y_to_color
 JsonVector2 = tuple[float, float]
 JsonVector3 = tuple[float, float, float]
 
-Empty = tuple[None]
 Sphere = tuple[Literal['sphere'], Vector3, float]
 Rectangle = tuple[Literal['rectangle'], Vector3, Vector3]
 Floor = tuple[Literal['floor'], Vector2, Vector2, float, float]
@@ -310,9 +309,9 @@ class Level:
                 else:
                     check = elem[5] - elem[6] < position.x < elem[5] + 0.1
                 if (
-                    elem[1] < position.z < elem[2]
+                    check
+                    and elem[1] < position.z < elem[2]
                     and elem[3] - 0.1 < position.y < elem[4] - 0.1
-                    and check
                 ):
                     return elem
             elif elem[0] == 'deep_line_x':

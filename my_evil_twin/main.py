@@ -1,18 +1,20 @@
-from collections import deque
 import random
+from collections import deque
 from typing import Optional, cast
 
 import pygame
 from OpenGL.GL import *
-from OpenGL.GLU import *
+from OpenGL.GLU import gluPerspective
 from pygame.locals import *
 
-from my_evil_twin.consts import (ENEMY_COUNT, FPS, GRAVITY, JUMP_SPEED, MOVE_SPEED, AI_TICK_TIME,
-                                 TURN_SPEED, VSYNC)
-from my_evil_twin.draw import clear_circle_display_lists, draw_circle, draw_rectangle
+from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNT, FPS, GRAVITY,
+                                 JUMP_SPEED, MOVE_SPEED, TURN_SPEED, VSYNC)
+from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
 from my_evil_twin.text_render import draw_text
-from my_evil_twin.utils import clamp, get_global_color_offset, set_global_color_offset, set_local_color_offset
+from my_evil_twin.utils import (get_global_color_offset,
+                                set_global_color_offset,
+                                set_local_color_offset)
 
 screen_size = pygame.Vector2()
 
@@ -60,7 +62,7 @@ def raycast() -> Optional[int]:
 
 
 try:
-    import OpenGL_accelerate # pyright: ignore [reportMissingImports]
+    import OpenGL_accelerate  # pyright: ignore [reportMissingImports]
 except ImportError:
     print('PyOpenGL-accelerate is not installed. It is highly '
           'recommended that you install it, as it will significantly '
@@ -287,13 +289,6 @@ while running:
             glEndList()
         glCallList(draw_list[0])
         glPopMatrix()
-        # glPushMatrix()
-        # glTranslatef(enemy_pos.x, enemy_pos.y + 6, enemy_pos.z)
-        # glRotatef(180, 0, 0, 1)
-        # glEnable(GL_TEXTURE_2D)
-        # draw_text(str(eix), 0, 1, Color(0, 0, 0))
-        # glDisable(GL_TEXTURE_2D)
-        # glPopMatrix()
         if enemy_pos.y <= 0:
             new_pos, new_color = random_enemy()
             enemy_pos.update(new_pos)
@@ -305,7 +300,6 @@ while running:
     if freecam:
         set_local_color_offset(0)
         draw_rectangle(position - pygame.Vector3(0.3, 0.0, 0.3), position + pygame.Vector3(0.3, 2.0, 0.3))
-    # hit = raycast()
     ## END DRAW WORLD
 
     ## DRAW HUD
@@ -326,7 +320,6 @@ while running:
     draw_text(f'X/Y/Z: {position.x:.1f}/{position.y:.1f}/{position.z:.1f}', 2, 12, Color(255, 255, 255))
     draw_text(f'VX/VY/VZ: {velocity.x:.1f}/{velocity.y:.1f}/{velocity.z:.1f}', 2, 22, Color(255, 255, 255))
     draw_text(f'COLLIDING/GROUND: {collided}/{on_ground}', 2, 32, Color(255, 255, 255))
-    # draw_text(f'LOOKING AT: {hit}', 2, 42, Color(255, 255, 255))
 
     glDisable(GL_TEXTURE_2D)
 

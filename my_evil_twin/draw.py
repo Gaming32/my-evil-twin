@@ -2,7 +2,6 @@ import math
 from typing import cast
 
 from OpenGL.GL import *
-from OpenGL.GLU import *
 from pygame.math import Vector2, Vector3
 
 from my_evil_twin.utils import y_to_color

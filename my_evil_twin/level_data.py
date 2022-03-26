@@ -1,5 +1,5 @@
-"""Am using a Python file to store the levels because
-error checking."""
+"""Am using a Python file to store the levels because we can do
+error checking this way."""
 
 from my_evil_twin.level import Level
 
