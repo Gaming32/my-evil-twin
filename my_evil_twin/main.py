@@ -7,7 +7,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import gluPerspective
 from pygame.locals import *
 
-from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNT, ENEMY_SIZE, FPS,
+from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNT, ENEMY_SIZE, ENEMY_SIZE_SQUARED, FPS,
                                  GRAVITY, HIDDEN_ENEMY_COUNT, JUMP_SPEED,
                                  MOVE_SPEED, TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
@@ -36,6 +36,18 @@ def respawn() -> None:
     position.update(LEVEL.spawn)
     velocity.update(0, 0, 0)
     rotation.update(0, 0)
+
+
+def full_reset() -> None:
+    global remaining_enemies, hidden_enemies, played_once
+    respawn()
+    enemies[:] = [
+        (*random_enemy(), pygame.Vector2(), [0])
+        for _ in range(ENEMY_COUNT)
+    ]
+    remaining_enemies = ENEMY_COUNT + HIDDEN_ENEMY_COUNT
+    hidden_enemies = HIDDEN_ENEMY_COUNT
+    played_once = True
 
 
 def random_enemy() -> tuple[pygame.Vector3, list[float]]:
@@ -70,13 +82,10 @@ except ImportError:
           'increase your framerate.')
 
 
-enemies: list[tuple[pygame.Vector3, list[float], pygame.Vector2, list[int]]] = [
-    (*random_enemy(), pygame.Vector2(), [0])
-    for _ in range(ENEMY_COUNT)
-]
-remaining_enemies = ENEMY_COUNT + HIDDEN_ENEMY_COUNT
-hidden_enemies = HIDDEN_ENEMY_COUNT
-ENEMY_SIZE_SQUARED = ENEMY_SIZE * ENEMY_SIZE
+enemies: list[tuple[pygame.Vector3, list[float], pygame.Vector2, list[int]]] = []
+remaining_enemies: int = 0
+hidden_enemies: int = 0
+played_once = False
 
 
 pygame.init()
@@ -146,7 +155,7 @@ while running:
                 set_global_color_offset(get_global_color_offset() - 1)
                 redraw_level()
             elif event.key == K_r:
-                respawn()
+                full_reset()
             elif event.key == K_g:
                 freecam = not freecam
                 if freecam:
@@ -314,7 +323,7 @@ while running:
                 glDeleteLists(draw_list[0], 1)
             draw_list[0] = 0
         if enemy_pos.distance_squared_to(position) <= ENEMY_SIZE_SQUARED:
-            respawn()
+            full_reset()
     if freecam:
         set_local_color_offset(0)
         draw_rectangle(position - pygame.Vector3(0.3, 0.0, 0.3), position + pygame.Vector3(0.3, 2.0, 0.3))
@@ -341,7 +350,11 @@ while running:
     draw_text(f'REMAINING: {remaining_enemies}', 2, 42, Color(255, 255, 255))
 
     if not remaining_enemies:
-        draw_centered_text('YOU WIN!', cx, cy, Color(0, 255, 0))
+        if played_once:
+            draw_centered_text('YOU WIN!', cx, cy - 14, Color(0, 200, 0))
+            draw_centered_text('Press R to Play Again', cx, cy + 6, Color(0, 200, 200))
+        else:
+            draw_centered_text('Press R to Play', cx, cy - 14, Color(0, 200, 200))
 
     glDisable(GL_TEXTURE_2D)
 
