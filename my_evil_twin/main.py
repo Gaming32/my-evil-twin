@@ -7,9 +7,9 @@ from OpenGL.GL import *
 from OpenGL.GLU import gluPerspective
 from pygame.locals import *
 
-from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNTS, ENEMY_SIZE, ENEMY_SIZE_SQUARED, FPS,
-                                 GRAVITY, HIDDEN_ENEMY_COUNTS, JUMP_SPEED, LIVES,
-                                 MOVE_SPEED, TURN_SPEED, VSYNC)
+from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNTS, ENEMY_RENDER_CAP,
+                                 ENEMY_SIZE_SQUARED, FPS, GRAVITY, JUMP_SPEED,
+                                 LIVES, MOVE_SPEED, TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
 from my_evil_twin.text_render import draw_centered_text, draw_text
@@ -49,17 +49,18 @@ def full_reset() -> None:
     free_enemies()
     respawn()
     if level < len(ENEMY_COUNTS):
-        enemy_count = ENEMY_COUNTS[level]
-        hidden_enemy_count = HIDDEN_ENEMY_COUNTS[level]
+        remaining_enemies = ENEMY_COUNTS[level]
     else:
-        enemy_count = ENEMY_COUNTS[-1] + 3 * level
-        hidden_enemy_count = HIDDEN_ENEMY_COUNTS[-1] + 3 * level
+        # Keep them guessing (unless they look here of course :P)
+        remaining_enemies = int(
+            ENEMY_COUNTS[-1] + 2 ** ((level - len(ENEMY_COUNTS) + 3) * 1.1) - 1
+        )
+    hidden_enemies = max(0, remaining_enemies - ENEMY_RENDER_CAP)
+    shown_enemies = remaining_enemies - hidden_enemies
     enemies[:] = [
         (*random_enemy(), pygame.Vector2(), [0])
-        for _ in range(enemy_count)
+        for _ in range(shown_enemies)
     ]
-    remaining_enemies = enemy_count + hidden_enemy_count
-    hidden_enemies = hidden_enemy_count
 
 
 def full_reset_death() -> None:
@@ -394,9 +395,9 @@ while running:
         level_name = f'Infinity {level - len(ENEMY_COUNTS)}'
     else:
         level_name = str(level)
-    draw_text(f'LIVES: {lives}', 2, 25, Color(255, 255, 255))
-    draw_text(f'LEVEL: {level_name}', 2, 35, Color(255, 255, 255))
-    draw_text(f'REMAINING: {remaining_enemies}', 2, 45, Color(255, 255, 255))
+    draw_text(f'LIVES: {lives}', 2, 26, Color(255, 255, 255))
+    draw_text(f'LEVEL: {level_name}', 2, 36, Color(255, 255, 255))
+    draw_text(f'REMAINING: {remaining_enemies}', 2, 46, Color(255, 255, 255))
 
     if not remaining_enemies:
         if level:
@@ -410,10 +411,9 @@ while running:
         else:
             if was_game_over:
                 draw_centered_text('Game Over!', cx, cy - 14, Color(200, 0, 0))
-                r_to_play_y = cy + 6
+                draw_centered_text('Press R to Play Again', cx, cy + 6, Color(0, 200, 200))
             else:
-                r_to_play_y = cy - 14
-            draw_centered_text('Press R to Play Again', cx, r_to_play_y, Color(0, 200, 200))
+                draw_centered_text('Press R to Play', cx, cy - 14, Color(0, 200, 200))
 
     glDisable(GL_TEXTURE_2D)
 
