@@ -460,7 +460,7 @@ while running:
             global_stats[1] = hit_accuracy
             global_stats[2] = levels_beaten
         draw_right_text(f'Levels beaten (high score): {global_stats[0]}', w - 2, 22, Color(255, 255, 255))
-        draw_right_text(f'Hit accuracy (high score): {global_stats[1] * 100:.2f}%', w - 2, 32, Color(255, 255, 255))
+        # draw_right_text(f'Hit accuracy (high score): {global_stats[1] * 100:.2f}%', w - 2, 32, Color(255, 255, 255))
 
         if level:
             draw_centered_text(f'You beat level {level_name}!', cx, cy - 14, Color(0, 200, 0))
