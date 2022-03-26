@@ -234,24 +234,6 @@ while running:
                     freecam = not freecam
                     if freecam:
                         freecam_pos = position.copy()
-            elif event.key == K_1:
-                rotation.y = 0
-                rotation.x = 0
-            elif event.key == K_2:
-                rotation.y = 90
-                rotation.x = 0
-            elif event.key == K_3:
-                rotation.y = 180
-                rotation.x = 0
-            elif event.key == K_4:
-                rotation.y = -90
-                rotation.x = 0
-            elif event.key == K_5:
-                rotation.y = 0
-                rotation.x = 90
-            elif event.key == K_6:
-                rotation.y = 0
-                rotation.x = -90
         elif event.type == KEYUP:
             keys_pressed.discard(event.key)
             if event.key == K_F11:
