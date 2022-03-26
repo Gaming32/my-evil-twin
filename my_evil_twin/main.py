@@ -67,7 +67,7 @@ def full_reset() -> None:
 
 
 def full_reset_death() -> None:
-    global level, lives
+    global level, lives, levels_beaten
     if remaining_enemies:
         level -= 1
         if level < -128:
@@ -76,6 +76,8 @@ def full_reset_death() -> None:
         if lives == 0:
             game_over()
             return
+    else:
+        levels_beaten += 1
     full_reset()
     level += 1
     if level > 127:
@@ -83,7 +85,7 @@ def full_reset_death() -> None:
 
 
 def game_over() -> None:
-    global level, lives, was_game_over, remaining_enemies, hidden_enemies
+    global level, lives, was_game_over, remaining_enemies, hidden_enemies, shots, hits, levels_beaten
     respawn()
     free_enemies()
     level = 0
@@ -92,6 +94,9 @@ def game_over() -> None:
     enemies.clear()
     remaining_enemies = 0
     hidden_enemies = 0
+
+    levels_beaten = 0
+    shots, hits = 0, 0
 
 
 def random_enemy() -> tuple[pygame.Vector3, list[float]]:
@@ -132,6 +137,9 @@ hidden_enemies: int = 0
 level = 0
 lives = LIVES
 was_game_over = False
+
+levels_beaten = 0
+shots, hits = 0, 0
 
 
 pygame.init()
@@ -234,8 +242,10 @@ while running:
             pygame.mouse.set_visible(False)
             mouse_owned = True
             if event.button == 1:
+                shots += 1
                 hit = raycast()
                 if hit is not None:
+                    hits += 1
                     print(hit, end=' ')
                     enemy_pos, color, enemy_vel, draw_list = enemies[hit]
                     if draw_list[0]:
@@ -407,6 +417,9 @@ while running:
     draw_text(f'REMAINING: {remaining_enemies}', 2, 46, Color(255, 255, 255))
 
     if not remaining_enemies:
+        draw_text(f'Levels beaten: {levels_beaten}', 2, 60, Color(255, 255, 255))
+        hit_accuracy = hits / shots if shots else 0
+        draw_text(f'Hit accuracy: {hit_accuracy * 100:.2f}%', 2, 70, Color(255, 255, 255))
         if level:
             draw_centered_text(f'You beat level {level_name}!', cx, cy - 14, Color(0, 200, 0))
             if level == len(ENEMY_COUNTS):
