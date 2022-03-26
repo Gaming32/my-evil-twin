@@ -7,8 +7,9 @@ from OpenGL.GL import *
 from OpenGL.GLU import gluPerspective
 from pygame.locals import *
 
-from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNT, FPS, GRAVITY, HIDDEN_ENEMY_COUNT,
-                                 JUMP_SPEED, MOVE_SPEED, TURN_SPEED, VSYNC)
+from my_evil_twin.consts import (AI_TICK_TIME, ENEMY_COUNT, ENEMY_SIZE, FPS,
+                                 GRAVITY, HIDDEN_ENEMY_COUNT, JUMP_SPEED,
+                                 MOVE_SPEED, TURN_SPEED, VSYNC)
 from my_evil_twin.draw import clear_circle_display_lists, draw_rectangle
 from my_evil_twin.level_data import LEVEL
 from my_evil_twin.text_render import draw_centered_text, draw_text
@@ -56,7 +57,7 @@ def raycast() -> Optional[int]:
     for _ in range(50):
         # draw_circle(ray, rotation, 0.25, 5)
         for (eix, (enemy, _, _, _)) in enumerate(enemies):
-            if enemy.distance_squared_to(ray) <= 2.25:
+            if enemy.distance_squared_to(ray) <= ENEMY_SIZE_SQUARED:
                 return eix
         ray += direction_vector
 
@@ -75,6 +76,7 @@ enemies: list[tuple[pygame.Vector3, list[float], pygame.Vector2, list[int]]] = [
 ]
 remaining_enemies = ENEMY_COUNT + HIDDEN_ENEMY_COUNT
 hidden_enemies = HIDDEN_ENEMY_COUNT
+ENEMY_SIZE_SQUARED = ENEMY_SIZE * ENEMY_SIZE
 
 
 pygame.init()
@@ -298,11 +300,11 @@ while running:
             glEndList()
         glCallList(draw_list[0])
         glPopMatrix()
-        glBegin(GL_LINES)
-        glVertex3f(enemy_pos.x, enemy_pos.y, enemy_pos.z)
-        look_pos = pygame.Vector3(0, 0, 1).rotate(-enemy_vel.as_polar()[1] + 90, pygame.Vector3(0, 1, 0)) * 3 + enemy_pos
-        glVertex3f(look_pos.x, look_pos.y, look_pos.z)
-        glEnd()
+        # glBegin(GL_LINES)
+        # glVertex3f(enemy_pos.x, enemy_pos.y, enemy_pos.z)
+        # look_pos = pygame.Vector3(0, 0, 1).rotate(-enemy_vel.as_polar()[1] + 90, pygame.Vector3(0, 1, 0)) * 3 + enemy_pos
+        # glVertex3f(look_pos.x, look_pos.y, look_pos.z)
+        # glEnd()
         if enemy_pos.y <= 0:
             new_pos, new_color = random_enemy()
             enemy_pos.update(new_pos)
@@ -311,6 +313,8 @@ while running:
             if draw_list[0]:
                 glDeleteLists(draw_list[0], 1)
             draw_list[0] = 0
+        if enemy_pos.distance_squared_to(position) <= ENEMY_SIZE_SQUARED:
+            respawn()
     if freecam:
         set_local_color_offset(0)
         draw_rectangle(position - pygame.Vector3(0.3, 0.0, 0.3), position + pygame.Vector3(0.3, 2.0, 0.3))
