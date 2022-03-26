@@ -2,6 +2,12 @@ import random
 from collections import deque
 from typing import Optional, Union, cast
 
+from my_evil_twin.consts import DEVELOPMENT
+
+if not DEVELOPMENT:
+    import OpenGL
+    OpenGL.ERROR_CHECKING = False
+
 import numpy as np
 import pygame
 from OpenGL.GL import *
@@ -238,9 +244,10 @@ while running:
             elif event.key == K_r:
                 full_reset_death()
             elif event.key == K_g:
-                freecam = not freecam
-                if freecam:
-                    freecam_pos = position.copy()
+                if DEVELOPMENT:
+                    freecam = not freecam
+                    if freecam:
+                        freecam_pos = position.copy()
             elif event.key == K_1:
                 rotation.y = 0
                 rotation.x = 0
